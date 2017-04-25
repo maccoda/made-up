@@ -8,7 +8,7 @@ struct Consumer<'a, I> {
 }
 
 impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
-    fn consume<'b>(&mut self) -> String {
+    fn consume(&mut self) -> String {
         while let Some(event) = self.iter.next() {
             println!("{:?}", event);
             match event {
@@ -94,7 +94,7 @@ fn print_end_elem(tag: &Tag) -> String {
     result
 }
 
-fn name_to_id(name: &String) -> String {
+fn name_to_id(name: &str) -> String {
     name.to_lowercase().replace(" ", "-")
 }
 
@@ -105,4 +105,31 @@ pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
         current: None,
     };
     consumer.consume()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_name_to_id() {
+        let actual = super::name_to_id("A very lOng name or Heading");
+        assert_eq!("a-very-long-name-or-heading", actual);
+    }
+
+    #[test]
+    fn test_consume() {
+        use pulldown_cmark::Parser;
+        use pulldown_cmark::OPTION_ENABLE_TABLES;
+        use std::fs::File;
+        use std::io::Read;
+
+        let mut content = String::new();
+        File::open("resources/all_test.md")
+            .and_then(|mut x| x.read_to_string(&mut content))
+            .unwrap();
+        let parser = Parser::new_ext(&content, OPTION_ENABLE_TABLES);
+
+        let actual = super::consume(parser);
+        let expected = include_str!("../tests/resources/all_test_raw_good.html");
+        assert_eq!(expected, actual);
+    }
 }

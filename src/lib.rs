@@ -11,6 +11,7 @@ use handlebars::Handlebars;
 
 mod html;
 
+/// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
 pub enum ConvError {
     Fail,
@@ -62,9 +63,9 @@ fn encapsulate_bare_html(content: String) -> Result<String, ConvError> {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_raw_html() {
+    fn test_create_html() {
         // Read expected
-        let expected = include_str!("../tests/resources/all_test_raw_good.html");
+        let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md").unwrap();
         assert_eq!(expected, actual);
     }
