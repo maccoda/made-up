@@ -1,5 +1,6 @@
 extern crate pulldown_cmark;
 extern crate handlebars;
+extern crate walkdir;
 
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -10,6 +11,7 @@ use handlebars::Handlebars;
 
 
 mod html;
+mod walker;
 
 /// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
@@ -29,6 +31,15 @@ impl From<handlebars::RenderError> for ConvError {
     fn from(error: handlebars::RenderError) -> ConvError {
         ConvError::Template(error)
     }
+}
+
+pub fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Vec<walker::MarkdownFile> {
+    // TODO Make this handle errors and document
+    let files = walker::find_markdown_files(root_dir).unwrap();
+    for file in &files {
+        println!("{:?}", file);
+    }
+    files
 }
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct

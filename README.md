@@ -4,6 +4,8 @@ files. Bringing back the old school simplicity and beautifying notes and
 documents.
 
 ## TODO
+
+### Functional
 - [X] Perform the basic conversion of markdown to HTML
 - [ ] Traverse directories to:
   - [ ] Create page heirarchy
@@ -15,4 +17,8 @@ documents.
   - [ ] List files to be excluded
   - [ ] Allow for a stylesheet to be specified
 - [X] Internal linking to sections within same page
-- [ ] Linking to other pages
+- [ ] Linking to other pages (Need to specify how to do this, end in *.html)
+
+### Technical
+- [ ] Get a logger in here please, no more println
+- [ ] Ensure properly handle errors
