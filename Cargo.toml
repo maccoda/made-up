@@ -5,3 +5,4 @@ authors = ["Dylan Maccora <maccora17@gmail.com>"]
 
 [dependencies]
 pulldown-cmark = "0.0.14"
+handlebars = "0.26"
