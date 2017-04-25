@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+
 mod html;
 
 #[derive(Debug)]
@@ -24,7 +25,7 @@ pub fn create_html<P: AsRef<Path>>(file_name: P) -> Result<String, ConvError> {
     let mut content = String::new();
     File::open(file_name)
         .and_then(|mut x| x.read_to_string(&mut content))?;
-    let parser = pulldown_cmark::Parser::new(&content);
+    let parser = pulldown_cmark::Parser::new_ext(&content, pulldown_cmark::OPTION_ENABLE_TABLES);
 
     // The below just simply prints the parsed markdown to the expected html
     // pulldown_cmark::html::push_html(&mut output, parser);

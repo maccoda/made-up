@@ -37,7 +37,6 @@ pub struct Consumer<'a, I> {
 impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
     fn consume<'b>(&mut self) -> String {
         while let Some(event) = self.iter.next() {
-            println!("{:?}", self.buffer);
             println!("{:?}", event);
             match event {
                 Event::Start(tag) => {
@@ -60,6 +59,7 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
                         self.buffer.push_str(&text)
                     }
                 }
+                Event::Html(content) => self.buffer.push_str(&content.to_string()),
                 elem => println!("Unhandled type: {:?}", elem),
             }
         }
@@ -78,6 +78,11 @@ fn print_start_elem(tag: &Tag) -> String {
         &Tag::Code => "<code>".to_string(),
         &Tag::CodeBlock(ref lang) => format!("<pre><code class=\"language-{}\">", lang),
         &Tag::Link(ref href, _) => format!("<a href=\"{}\">", href),
+        // TODO Handle alignment
+        &Tag::Table(_) => "<table>".to_string(),
+        &Tag::TableHead => "<thead>".to_string(),
+        &Tag::TableCell => "<td>".to_string(),
+        &Tag::TableRow => "<tr>".to_string(),
         tag => {
             println!("{:?}", tag);
             unimplemented!();
@@ -100,6 +105,11 @@ fn print_end_elem(tag: &Tag) -> String {
         &Tag::Code => "</code>".to_string(),
         &Tag::CodeBlock(_) => "</code></pre>".to_string(),
         &Tag::Link(_, _) => "</a>".to_string(),
+        // TODO Handle alignment
+        &Tag::Table(_) => "</table>".to_string(),
+        &Tag::TableHead => "</thead>".to_string(),
+        &Tag::TableCell => "</td>".to_string(),
+        &Tag::TableRow => "</tr>".to_string(),
         tag => {
             println!("{:?}", tag);
             unimplemented!();
