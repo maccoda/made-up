@@ -9,8 +9,9 @@ documents.
 - [X] Perform the basic conversion of markdown to HTML
 - [ ] Traverse directories to:
   - [ ] Create page heirarchy
-  - [ ] Discover all markdown to be used
-- [ ] Auto-generate the index page as just a listing of all top level pages
+  - [X] Discover all markdown to be used
+- [-] Auto-generate the index page as just a listing of all top level pages
+(Partially complete, it generates for all files not just top level)
 - [ ] Shall provide a configuration where:
   - [ ] Can excluded certain files from being
   - [ ] Can specify user defined index instead of generated

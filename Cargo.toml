@@ -5,5 +5,11 @@ authors = ["Dylan Maccora <maccora17@gmail.com>"]
 
 [dependencies]
 pulldown-cmark = "0.0.14"
-handlebars = "0.26"
+# handlebars = "0.26"
 walkdir = "1.*"
+serde_json = "0.8.4"
+rustc-serialize = "0.*"
+
+[dependencies.handlebars]
+version = "0.24.1"
+features = ["serde_type"]

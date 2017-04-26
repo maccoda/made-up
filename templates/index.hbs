@@ -1,0 +1,19 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{{stylesheet}}">
+
+    <title>{{title}}</title>
+</head>
+
+<body>
+    <h1>Table of Contents</h1>
+    <ul>
+        {{#each element as |elem|}}
+        <li><a href="{{elem}}.html">{{elem}}</a></li>
+        {{/each}}
+    </ul>
+</body>
+
+</html>

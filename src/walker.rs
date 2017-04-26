@@ -17,10 +17,20 @@ impl MarkdownFile {
     /// Return the name of the Markdown file
     pub fn get_file_name(&self) -> String {
         self.path
+            .as_path()
             .file_name()
             .and_then(|x| x.to_str())
             .unwrap()
             .to_string()
+    }
+}
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    #[test]
+    fn test_get_file_name() {
+        let file = super::MarkdownFile { path: PathBuf::from("resources/tester.md") };
+        assert_eq!(file.get_file_name(), "tester");
     }
 }
 
