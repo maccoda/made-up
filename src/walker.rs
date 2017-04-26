@@ -9,8 +9,18 @@ pub struct MarkdownFile {
 }
 
 impl MarkdownFile {
+    // Return the path of the Markdown file
     pub fn get_path(&self) -> &PathBuf {
         &self.path
+    }
+
+    /// Return the name of the Markdown file
+    pub fn get_file_name(&self) -> String {
+        self.path
+            .file_name()
+            .and_then(|x| x.to_str())
+            .unwrap()
+            .to_string()
     }
 }
 
