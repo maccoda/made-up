@@ -22,9 +22,11 @@ install:
   - rustc -V
   - cargo -V
 
+build: false
+
 test_script:
-  # - cargo build --release --bin made-up
   - cargo test
+  # - cargo build --release --bin made-up
 
 # artifacts:
 #   - path: target/release/made-up
