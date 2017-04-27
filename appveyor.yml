@@ -22,7 +22,18 @@ install:
   - rustc -V
   - cargo -V
 
-build: false
+build:
+  - cargo build --release --bin made-up
 
 test_script:
-- cargo test
+  - cargo test
+
+artifacts:
+  - path: target/release/made-up
+  - name: Executable
+
+deploy:
+  description: "Release"
+  auth_token:
+    secure: sFyLFekF5CK3vWnsk/FRNDQ0EP2j33fxZgNN07qQJnYkTcEFHN/xFak58pZwSn7Z
+    artifact: target/release/made-up

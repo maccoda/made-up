@@ -10,7 +10,7 @@ struct Consumer<'a, I> {
 impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
     fn consume(&mut self) -> String {
         while let Some(event) = self.iter.next() {
-            println!("{:?}", event);
+            debug!("{:?}", event);
             match event {
                 Event::Start(tag) => {
                     self.buffer.push_str(&print_start_elem(&tag));
@@ -33,7 +33,7 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
                     }
                 }
                 Event::Html(content) => self.buffer.push_str(&content.to_string()),
-                elem => println!("Unhandled type: {:?}", elem),
+                elem => warn!("Unhandled type: {:?}", elem),
             }
         }
         self.buffer.clone()
@@ -58,12 +58,12 @@ fn print_start_elem(tag: &Tag) -> String {
         &Tag::TableCell => "<td>".to_string(),
         &Tag::TableRow => "<tr>".to_string(),
         tag => {
-            println!("{:?}", tag);
+            warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
         }
     };
 
-    println!("{:?}", result);
+    debug!("{:?}", result);
     result
 }
 
@@ -85,12 +85,12 @@ fn print_end_elem(tag: &Tag) -> String {
         &Tag::TableCell => "</td>\n".to_string(),
         &Tag::TableRow => "</tr>\n".to_string(),
         tag => {
-            println!("{:?}", tag);
+            warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
         }
     };
 
-    println!("{:?}", result);
+    debug!("{:?}", result);
     result
 }
 

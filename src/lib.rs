@@ -2,10 +2,12 @@ extern crate pulldown_cmark;
 extern crate handlebars;
 extern crate walkdir;
 extern crate serde_json;
+#[macro_use]
+extern crate log;
 
 use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::Path;
 
 use handlebars::Handlebars;
@@ -103,7 +105,7 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> FileList {
     // TODO Make this handle errors and document
     let files = walker::find_markdown_files(root_dir).unwrap();
     for file in &files {
-        println!("{:?}", file);
+        debug!("{:?}", file);
     }
     FileList { files: files }
 }

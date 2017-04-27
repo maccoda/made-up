@@ -28,6 +28,17 @@ impl MarkdownFile {
             .to_string()
     }
 }
+
+fn is_accepted_markdown_file(path: &Path) -> bool {
+    const FILE_EXT: &'static str = "md";
+    if let Some(extension) = path.extension().and_then(|x| x.to_str()) {
+        if extension.to_lowercase().eq(FILE_EXT) {
+            return true;
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
@@ -43,20 +54,10 @@ pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFi
     for entry in WalkDir::new(root_dir) {
         let entry = entry?;
         let path = entry.path();
-        if is_accepted_markdown_file(&path) {
+        if is_accepted_markdown_file(path) {
             files.push(MarkdownFile { path: path.to_owned() });
         }
     }
 
     Ok(files)
-}
-
-fn is_accepted_markdown_file(path: &Path) -> bool {
-    const FILE_EXT: &'static str = "md";
-    if let Some(extension) = path.extension().and_then(|x| x.to_str()) {
-        if extension.to_lowercase().eq(FILE_EXT) {
-            return true;
-        }
-    }
-    false
 }
