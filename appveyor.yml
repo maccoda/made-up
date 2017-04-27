@@ -28,7 +28,7 @@ test_script:
 
 artifacts:
   - path: target/release/made-up
-  - name: Executable
+    name: Executable
 
 deploy:
   description: "Release"
