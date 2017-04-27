@@ -6,6 +6,11 @@ Simple tool to generate a static website from a directory structure of Markdown
 files. Bringing back the old school simplicity and beautifying notes and
 documents.
 
+## Usage
+### Configuration
+Made-Up will look for a configuration file `mdup.yml` in the root directory
+which allows the user to have a bit more control over the end product.
+
 ## TODO
 
 ### Functional
