@@ -9,6 +9,10 @@ pub struct MarkdownFile {
 }
 
 impl MarkdownFile {
+    /// Creates a `MarkdownFile` from the provided path
+    pub fn from(path: &Path) -> MarkdownFile {
+        MarkdownFile { path: path.to_path_buf() }
+    }
     // Return the path of the Markdown file
     pub fn get_path(&self) -> &PathBuf {
         &self.path
@@ -18,7 +22,7 @@ impl MarkdownFile {
     pub fn get_file_name(&self) -> String {
         self.path
             .as_path()
-            .file_name()
+            .file_stem()
             .and_then(|x| x.to_str())
             .unwrap()
             .to_string()

@@ -16,6 +16,9 @@ mod html;
 mod walker;
 mod file_utils;
 
+#[cfg(test)]
+mod test_utils;
+
 /// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
 pub enum ConvError {
@@ -138,11 +141,24 @@ fn encapsulate_bare_html(content: String) -> Result<String, ConvError> {
 
 #[cfg(test)]
 mod tests {
+    use super::test_utils;
     #[test]
     fn test_create_html() {
         // Read expected
         let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md").unwrap();
-        assert_eq!(expected, actual);
+        test_utils::compare_string_content(expected.to_string(), actual);
+    }
+
+    #[test]
+    fn test_generate_index() {
+        use std::path::Path;
+        use super::walker::MarkdownFile;
+        let expected = include_str!("../tests/resources/index_good.html");
+        let actual = super::generate_index(&super::FileList {
+                                                files: vec![MarkdownFile::from(&Path::new("all_test.md")),
+                                                            MarkdownFile::from(&Path::new("second-page.md"))],
+                                            }).unwrap();
+        test_utils::compare_string_content(expected.to_string(), actual);
     }
 }
