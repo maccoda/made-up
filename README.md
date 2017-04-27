@@ -1,4 +1,7 @@
 # Made-up
+[![Travis](https://img.shields.io/travis/maccoda/made-up.svg)]()
+[![AppVeyor](https://img.shields.io/appveyor/ci/maccoda/made-up.svg)]()
+
 Simple tool to generate a static website from a directory structure of Markdown
 files. Bringing back the old school simplicity and beautifying notes and
 documents.
