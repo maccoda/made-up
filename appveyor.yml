@@ -22,10 +22,8 @@ install:
   - rustc -V
   - cargo -V
 
-build:
-  - cargo build --release --bin made-up
-
 test_script:
+  - cargo build --release --bin made-up
   - cargo test
 
 artifacts:
