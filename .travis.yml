@@ -5,5 +5,5 @@ rust:
     - nightly
 
 script:
-    - cargo build --release --bin made-up
+    # - cargo build --release --bin made-up
     - cargo test

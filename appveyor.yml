@@ -22,18 +22,19 @@ install:
   - rustc -V
   - cargo -V
 
-build:
-  - cargo build --release --bin made-up
-
 test_script:
+  # - cargo build --release --bin made-up
   - cargo test
 
-artifacts:
-  - path: target/release/made-up
-  - name: Executable
+# artifacts:
+#   - path: target/release/made-up
+#     name: Executable
 
-deploy:
-  description: "Release"
-  auth_token:
-    secure: sFyLFekF5CK3vWnsk/FRNDQ0EP2j33fxZgNN07qQJnYkTcEFHN/xFak58pZwSn7Z
-    artifact: target/release/made-up
+# deploy:
+#   description: "Release"
+#   auth_token:
+#     secure: sFyLFekF5CK3vWnsk/FRNDQ0EP2j33fxZgNN07qQJnYkTcEFHN/xFak58pZwSn7Z
+#     artifact: target/release/made-up
+#   on:
+#     branch: master                 # release from master branch only
+#     appveyor_repo_tag: true
