@@ -1,0 +1,6 @@
+stylesheet: "style.css"
+index: false
+black_list:
+  - "bad_file.md"
+  - "worse_file.md"
+out_dir: "output"

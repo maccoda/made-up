@@ -1,5 +1,5 @@
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::{Read, Write, self};
 use std::path::Path;
 
 /// Writes the provided content to a file at the path provided.
@@ -22,14 +22,23 @@ pub fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {
     fs::metadata(path).map(|x| !x.is_dir()).unwrap_or(false)
 }
 
+/// Use to write to a file that is in a separate directory. This will ensure
+/// that directory is created and create if required before writing to the file.
+pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P, content_to_write: String, dir: P) -> io::Result<()>{
+    fs::create_dir_all(&dir)?;
+    write_to_file(dir.as_ref().join(file_name), content_to_write);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
+
+    const CONTENT: &'static str = "This is a test";
+    const FILE_NAME: &'static str = "test_out.txt";
     // I do admit there is huge dependencies here but meh.
     #[test]
     fn test_write_and_read_file() {
-        const CONTENT: &'static str = "This is a test";
-        const FILE_NAME: &'static str = "test_out.txt";
         super::write_to_file(FILE_NAME, String::from(CONTENT));
         // Check it exists
         assert!(fs::metadata(FILE_NAME).is_ok());
@@ -45,5 +54,24 @@ mod tests {
     fn test_check_file() {
         // Will check I exist
         assert!(super::check_file_exists("src/file_utils.rs"));
+    }
+
+    #[test]
+    fn test_dir_exists_write() {
+        const DIR: &str = "src";
+        super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
+        assert_eq!(CONTENT, super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
+
+        fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
+    }
+
+    #[test]
+    fn test_dir_write() {
+        const DIR: &str = "awoogaa";
+        super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
+        assert_eq!(CONTENT, super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
+
+        fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
+        fs::remove_dir(DIR).unwrap();
     }
 }

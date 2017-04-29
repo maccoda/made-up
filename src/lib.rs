@@ -8,19 +8,17 @@ extern crate serde_yaml;
 #[macro_use]
 extern crate serde_derive;
 
-use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::Path;
 
-use handlebars::Handlebars;
-use serde_json::Value;
 
 
 mod html;
 mod walker;
 mod file_utils;
 mod config;
+mod templates;
 
 #[cfg(test)]
 mod test_utils;
@@ -58,6 +56,8 @@ impl FileList {
     }
 }
 
+
+const DEF_OUT_DIR: &str = "./out";
 /// Entry function which will perform the entire process for the static site
 /// generation.
 ///
@@ -69,42 +69,29 @@ impl FileList {
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     let all_files = find_all_files(&root_dir);
     let configuration = read_config(&root_dir)?;
-    let index_content = generate_index(&all_files, &configuration).unwrap();
-    file_utils::write_to_file("index.html", index_content);
+    let out_dir = configuration.out_dir().unwrap_or(DEF_OUT_DIR.to_owned());
+    if configuration.index().is_none() {
+        debug!("Index to be generated");
+        let index_content = templates::generate_index(&all_files, &configuration).unwrap();
+        file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
+    }
     for file in all_files.get_files() {
         let result = create_html(file.get_path(), &configuration).unwrap();
-
-        file_utils::write_to_file(format!("{}.html", file.get_file_name()), result);
+        file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()), result, out_dir.to_owned())?;
     }
+
+    // Copy across the stylesheet
+    configuration.stylesheet().and_then(|x| {
+        let source = root_dir.as_ref().join(&x);
+        debug!("Source stylesheet {:?}", source);
+        let dest = out_dir.to_owned() + "/" + &x;
+        debug!("Dest stylesheet: {:?}", dest);
+        fs::copy(source, dest).ok()}
+    ).unwrap();
     Ok(())
 }
 
-/// Construct a generated index page for the site from the list of files used.
-fn generate_index(files: &FileList, config: &config::Configuration) -> Result<String, ConvError> {
-    const TEMPLATE_NAME: &'static str = "index";
-    // Build the page from the template just to make it easier for future us
-    let mut handlebars = Handlebars::new();
-    handlebars
-        .register_template_file(TEMPLATE_NAME,
-                                &Path::new(&format!("templates/{}.hbs", TEMPLATE_NAME)))
-        .unwrap();
 
-    let mut data: BTreeMap<String, Value> = BTreeMap::new();
-    data.insert("stylesheet".to_string(),
-                Value::String(config.stylesheet.clone()));
-    // TODO Get the title perhaps from the configuration
-    data.insert("title".to_string(),
-                Value::String("Index Generated Title".to_string()));
-    data.insert("element".to_string(),
-                Value::Array(files
-                                 .get_files()
-                                 .iter()
-                                 .map(|x| Value::String(x.get_file_name()))
-                                 .collect()));
-
-    let output = handlebars.render(TEMPLATE_NAME, &data)?;
-    Ok(output)
-}
 
 /// Starting at the root directory provided, find all Markdown files within in.
 fn find_all_files<P: AsRef<Path>>(root_dir: P) -> FileList {
@@ -126,30 +113,10 @@ fn create_html<P: AsRef<Path>>(file_name: P,
         .and_then(|mut x| x.read_to_string(&mut content))?;
     let parser = pulldown_cmark::Parser::new_ext(&content, pulldown_cmark::OPTION_ENABLE_TABLES);
 
-    encapsulate_bare_html(html::consume(parser), config)
+    templates::encapsulate_bare_html(html::consume(parser), config)
 }
 
-/// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
-fn encapsulate_bare_html(content: String,
-                         config: &config::Configuration)
-                         -> Result<String, ConvError> {
-    const TEMPLATE_NAME: &'static str = "basic";
-    // Build the page from the template just to make it easier for future us
-    let mut handlebars = Handlebars::new();
-    handlebars
-        .register_template_file(TEMPLATE_NAME,
-                                &Path::new(&format!("templates/{}.hbs", TEMPLATE_NAME)))
-        .unwrap();
 
-    let mut data: BTreeMap<String, String> = BTreeMap::new();
-    data.insert("stylesheet".to_string(), config.stylesheet.clone());
-    // TODO Get the title from the first heading
-    data.insert("title".to_string(), "Generated Title".to_string());
-    data.insert("md_content".to_string(), content);
-
-    let output = handlebars.render(TEMPLATE_NAME, &data)?;
-    Ok(output)
-}
 // TODO Add some testing on this
 /// Finds the configuration file and deserializes it.
 fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvError> {
@@ -172,26 +139,13 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
 
 #[cfg(test)]
 mod tests {
-    use super::test_utils;
+    use test_utils;
     #[test]
     fn test_create_html() {
         // Read expected
         let config = super::config::Configuration::from("resources/mdup.yml");
         let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md", &config).unwrap();
-        test_utils::compare_string_content(expected.to_string(), actual);
-    }
-
-    #[test]
-    fn test_generate_index() {
-        use std::path::Path;
-        use super::walker::MarkdownFile;
-        let config = super::config::Configuration::from("resources/mdup.yml");
-        let expected = include_str!("../tests/resources/index_good.html");
-        let actual = super::generate_index(&super::FileList {
-                                                files: vec![MarkdownFile::from(&Path::new("all_test.md")),
-                                                            MarkdownFile::from(&Path::new("second-page.md"))],
-                                            }, &config).unwrap();
         test_utils::compare_string_content(expected.to_string(), actual);
     }
 }

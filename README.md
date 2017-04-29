@@ -9,7 +9,16 @@ documents.
 ## Usage
 ### Configuration
 Made-Up will look for a configuration file `mdup.yml` in the root directory
-which allows the user to have a bit more control over the end product.
+which allows the user to have a bit more control over the end product. This
+configuration file is not mandatory thus all fields are optional. If not
+specified the default will be used.
+
+| Field | Type | Description | Default |
+|---|---| --- | --- |
+|`stylesheet` | String | Relative path to the style sheet to use for the site|  |
+|`index` | Boolean | Choose if index page is to be generated. | *False* |
+| `out_dir`| String | Path to the output directory. | *./out*|
+| **Currently Unimplemented** ~~`black_list`~~|  Array\<String\> | List of all markdown files to ignore. | [ ] |
 
 ## TODO
 
@@ -23,7 +32,7 @@ which allows the user to have a bit more control over the end product.
 - [ ] Shall provide a configuration where:
   - [ ] Can excluded certain files from being part of the site
   - [ ] Can specify user defined index instead of generated
-  - [ ] Allow for a stylesheet to be specified
+  - [X] Allow for a stylesheet to be specified
 - [X] Internal linking to sections within same page
 - [X] Linking to other pages (Need to specify how to do this, end in *.html)
 
