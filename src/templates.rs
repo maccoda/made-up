@@ -69,10 +69,10 @@ mod tests {
         use config;
         let config = config::Configuration::from("resources/mdup.yml");
         let expected = include_str!("../tests/resources/index_good.html");
-        let actual = super::generate_index(&super::FileList {
-                                                files: vec![MarkdownFile::from(&Path::new("second-page.md")),
+        let actual = super::generate_index(&super::FileList::new(
+                                                vec![MarkdownFile::from(&Path::new("second-page.md")),
                                                             MarkdownFile::from(&Path::new("all_test.md"))],
-                                            }, &config).unwrap();
+        ), &config).unwrap();
         test_utils::compare_string_content(expected.to_string(), actual);
     }
 }

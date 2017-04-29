@@ -50,8 +50,13 @@ pub struct FileList {
 }
 
 impl FileList {
+    fn new(files: Vec<walker::MarkdownFile>) -> FileList {
+        let mut sorted_files = files;
+        sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
+        FileList{files: sorted_files}
+    }
     /// Get all Markdown files
-    pub fn get_files(&self) -> &Vec<walker::MarkdownFile> {
+    fn get_files(&self) -> &Vec<walker::MarkdownFile> {
         &self.files
     }
 }
@@ -101,7 +106,7 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> FileList {
     for file in &files {
         debug!("{:?}", file);
     }
-    FileList { files: files }
+    FileList::new(files)
 }
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct
