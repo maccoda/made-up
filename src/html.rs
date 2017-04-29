@@ -1,44 +1,16 @@
 use pulldown_cmark::{Event, Tag};
 
-trait ToHtml {
-    fn to_html() -> String;
-}
-
-
-#[derive(Debug, Clone)]
-struct Element<'a> {
-    tag: Tag<'a>,
-    content: Option<String>,
-}
-
-impl<'a> Element<'a> {
-    fn new(tag: Tag<'a>) -> Element<'a> {
-        Element {
-            tag: tag,
-            content: None,
-        }
-    }
-
-    fn content(&mut self, content: Option<String>) {
-        self.content = content;
-    }
-}
-
-fn name_to_id(name: &String) -> String {
-    name.to_lowercase().replace(" ", "-")
-}
-
 #[derive(Debug)]
-pub struct Consumer<'a, I> {
+struct Consumer<'a, I> {
     iter: I,
     buffer: String,
     current: Option<Tag<'a>>,
 }
+
 impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
-    fn consume<'b>(&mut self) -> String {
+    fn consume(&mut self) -> String {
         while let Some(event) = self.iter.next() {
-            println!("{:?}", self.buffer);
-            println!("{:?}", event);
+            debug!("{:?}", event);
             match event {
                 Event::Start(tag) => {
                     self.buffer.push_str(&print_start_elem(&tag));
@@ -60,12 +32,14 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
                         self.buffer.push_str(&text)
                     }
                 }
-                elem => println!("Unhandled type: {:?}", elem),
+                Event::Html(content) => self.buffer.push_str(&content.to_string()),
+                elem => warn!("Unhandled type: {:?}", elem),
             }
         }
         self.buffer.clone()
     }
 }
+
 fn print_start_elem(tag: &Tag) -> String {
     let result = match tag {
         &Tag::Header(int) => format!("<h{} id=\"", int),
@@ -78,13 +52,18 @@ fn print_start_elem(tag: &Tag) -> String {
         &Tag::Code => "<code>".to_string(),
         &Tag::CodeBlock(ref lang) => format!("<pre><code class=\"language-{}\">", lang),
         &Tag::Link(ref href, _) => format!("<a href=\"{}\">", href),
+        // TODO Handle alignment
+        &Tag::Table(_) => "<table>".to_string(),
+        &Tag::TableHead => "<thead>".to_string(),
+        &Tag::TableCell => "<td>".to_string(),
+        &Tag::TableRow => "<tr>".to_string(),
         tag => {
-            println!("{:?}", tag);
+            warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
         }
     };
 
-    println!("{:?}", result);
+    debug!("{:?}", result);
     result
 }
 
@@ -96,18 +75,27 @@ fn print_end_elem(tag: &Tag) -> String {
         &Tag::Item => "</li>\n".to_string(),
         &Tag::List(_) => "</ul>\n".to_string(),
         &Tag::Paragraph => "</p>\n".to_string(),
-        &Tag::Image(_, _) => "/>".to_string(),
-        &Tag::Code => "</code>".to_string(),
-        &Tag::CodeBlock(_) => "</code></pre>".to_string(),
-        &Tag::Link(_, _) => "</a>".to_string(),
+        &Tag::Image(_, _) => "/>\n".to_string(),
+        &Tag::Code => "</code>\n".to_string(),
+        &Tag::CodeBlock(_) => "</code></pre>\n".to_string(),
+        &Tag::Link(_, _) => "</a>\n".to_string(),
+        // TODO Handle alignment
+        &Tag::Table(_) => "</table>\n".to_string(),
+        &Tag::TableHead => "</thead>\n".to_string(),
+        &Tag::TableCell => "</td>\n".to_string(),
+        &Tag::TableRow => "</tr>\n".to_string(),
         tag => {
-            println!("{:?}", tag);
+            warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
         }
     };
 
-    println!("{:?}", result);
+    debug!("{:?}", result);
     result
+}
+
+fn name_to_id(name: &str) -> String {
+    name.to_lowercase().replace(" ", "-")
 }
 
 pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
@@ -116,6 +104,32 @@ pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
         buffer: String::new(),
         current: None,
     };
-
     consumer.consume()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_name_to_id() {
+        let actual = super::name_to_id("A very lOng name or Heading");
+        assert_eq!("a-very-long-name-or-heading", actual);
+    }
+
+    #[test]
+    fn test_consume() {
+        use pulldown_cmark::Parser;
+        use pulldown_cmark::OPTION_ENABLE_TABLES;
+        use std::fs::File;
+        use std::io::Read;
+
+        let mut content = String::new();
+        File::open("resources/all_test.md")
+            .and_then(|mut x| x.read_to_string(&mut content))
+            .unwrap();
+        let parser = Parser::new_ext(&content, OPTION_ENABLE_TABLES);
+
+        let actual = super::consume(parser);
+        let expected = include_str!("../tests/resources/all_test_raw_good.html");
+        assert_eq!(expected, actual);
+    }
 }

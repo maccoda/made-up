@@ -40,5 +40,5 @@ We can have **bold** text, *italic* text
 
 
 ## A second page
-Want to be able to link to [another page](second-page.md) so that is is similar to
+Want to be able to link to [another page](second-page.html) so that is is similar to
 a static site.

@@ -1,0 +1,42 @@
+environment:
+  RUST_DIR: C:\Rust\
+  matrix:
+  - TARGET: x86_64-pc-windows-msvc
+    BITS: 64
+  - TARGET: i686-pc-windows-msvc
+    BITS: 32
+  - TARGET: i686-pc-windows-gnu
+    BITS: 32
+
+shallow_clone: true
+
+cache:
+  - target
+  - '%USERPROFILE%\.cargo'
+
+install:
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.msi"
+  - msiexec /i rust-nightly-%TARGET%.msi /quiet /passive /qn /norestart INSTALLDIR=%RUST_DIR%
+  - SET PATH=%PATH%;%RUST_DIR%\bin
+  - SET PATH=%PATH%;C:\msys64\mingw%BITS%\bin;C:\msys64\usr\bin
+  - rustc -V
+  - cargo -V
+
+build: false
+
+test_script:
+  - cargo test
+  # - cargo build --release --bin made-up
+
+# artifacts:
+#   - path: target/release/made-up
+#     name: Executable
+
+# deploy:
+#   description: "Release"
+#   auth_token:
+#     secure: sFyLFekF5CK3vWnsk/FRNDQ0EP2j33fxZgNN07qQJnYkTcEFHN/xFak58pZwSn7Z
+#     artifact: target/release/made-up
+#   on:
+#     branch: master                 # release from master branch only
+#     appveyor_repo_tag: true
