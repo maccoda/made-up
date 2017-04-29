@@ -35,6 +35,7 @@ specified the default will be used.
   - [X] Allow for a stylesheet to be specified
 - [X] Internal linking to sections within same page
 - [X] Linking to other pages (Need to specify how to do this, end in *.html)
+- [ ] Copy images
 
 ### Technical
 - [X] Get a logger in here please, no more println
