@@ -1,7 +1,7 @@
 extern crate made_up;
 
 use std::fs::{self, File};
-// use std::io::{Read, Write};
+use std::io::{Read};
 use std::path::Path;
 #[test]
 fn test_it() {
@@ -12,33 +12,25 @@ fn test_it() {
     check_file_exists("out/style.css");
 
     let expected = include_str!("../tests/resources/all_test_good.html");
-    let actual = include_str!("../out/all_test.html");
+    let actual = read_from_file("out/all_test.html");
     compare_string_content(expected.to_string(), actual.to_string());
     let expected = include_str!("../tests/resources/index_good.html");
-    let actual = include_str!("../out/index.html");
+    let actual = read_from_file("out/index.html");
     compare_string_content(expected.to_string(), actual.to_string());
     let expected = include_str!("../tests/resources/second-page_good.html");
-    let actual = include_str!("../out/second-page.html");
+    let actual = read_from_file("out/second-page.html");
     compare_string_content(expected.to_string(), actual.to_string());
 
     fs::remove_dir_all("out").unwrap();
 }
 
-
-// /// Writes the provided content to a file at the path provided.
-// fn write_to_file<P: AsRef<Path>>(file_name: P, content_to_write: String) {
-//     let mut file = File::create(file_name).unwrap();
-//     let content: &[u8] = &(content_to_write.into_bytes())[..];
-//     file.write_all(content).unwrap();
-// }
-
-// /// Reads and returns the contents of the file at the path provided.
-// fn read_from_file<P: AsRef<Path>>(file_name: P) -> String {
-//     let mut content = String::new();
-//     let mut file = File::open(file_name).unwrap();
-//     file.read_to_string(&mut content).unwrap();
-//     content
-// }
+/// Reads and returns the contents of the file at the path provided.
+fn read_from_file<P: AsRef<Path>>(file_name: P) -> String {
+    let mut content = String::new();
+    let mut file = File::open(file_name).unwrap();
+    file.read_to_string(&mut content).unwrap();
+    content
+}
 
 /// Checks if a file exists. Will return false if it exists or it exists but is a directory.
 fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {

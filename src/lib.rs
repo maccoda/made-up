@@ -65,7 +65,8 @@ const DEF_OUT_DIR: &str = "./out";
 ///
 /// * Find all markdown files to use
 /// * Convert all to HTML
-/// * Read the configuration to determine how the output should beproduced
+/// * Read the configuration to determine how the output should be produced
+/// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     let all_files = find_all_files(&root_dir);
     let configuration = read_config(&root_dir)?;
