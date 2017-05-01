@@ -73,6 +73,7 @@ const DEF_OUT_DIR: &str = "./out";
 /// * Read the configuration to determine how the output should be produced
 /// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
+    info!("Generating site from directory: {:?}", root_dir.as_ref());
     let all_files = find_all_files(&root_dir);
     let configuration = read_config(&root_dir)?;
     let out_dir = configuration.out_dir().unwrap_or(DEF_OUT_DIR.to_owned());
