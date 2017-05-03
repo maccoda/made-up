@@ -1,7 +1,27 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
-use walkdir::WalkDir;
+use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+
+
+/// Wrapper of a list of Markdown files. With end goal to be able to convey the
+/// hierarchy.
+pub struct FileList {
+    // Considering maintaining directory structure by Map<Vec<>>
+    files: Vec<MarkdownFile>,
+}
+
+impl FileList {
+    pub fn new(files: Vec<MarkdownFile>) -> FileList {
+        let mut sorted_files = files;
+        sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
+        FileList{files: sorted_files}
+    }
+    /// Get all Markdown files
+    pub fn get_files(&self) -> &Vec<MarkdownFile> {
+        &self.files
+    }
+}
 
 #[derive(Debug)]
 pub struct MarkdownFile {
@@ -39,6 +59,29 @@ fn is_accepted_markdown_file(path: &Path) -> bool {
     false
 }
 
+/// Determines if the provided entry should be excluded from the files to check.
+/// The check just determines if the file or directory begins with an
+/// underscore.
+fn is_excluded(entry: &DirEntry) -> bool {
+    entry.file_name().to_str().map(|s| s.starts_with("_")).unwrap_or(false)
+}
+
+pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFile>, io::Error> {
+    let mut files = vec![];
+    let files_to_check = WalkDir::new(root_dir).into_iter().filter_entry(|file| !is_excluded(file));
+    for entry in files_to_check {
+        let entry = entry?;
+        let path = entry.path();
+        if is_accepted_markdown_file(path) {
+            info!("Adding file {:?}", path);
+            info!("Parent: {:?}", path.parent());
+            files.push(MarkdownFile { path: path.to_owned() });
+        }
+    }
+
+    Ok(files)
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
@@ -47,17 +90,16 @@ mod tests {
         let file = super::MarkdownFile { path: PathBuf::from("resources/tester.md") };
         assert_eq!(file.get_file_name(), "tester");
     }
-}
 
-pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFile>, io::Error> {
-    let mut files = vec![];
-    for entry in WalkDir::new(root_dir) {
-        let entry = entry?;
-        let path = entry.path();
-        if is_accepted_markdown_file(path) {
-            files.push(MarkdownFile { path: path.to_owned() });
-        }
+     #[test]
+    fn test_find_markdown_files() {
+        const ROOT_DIR: &str = "resources";
+        let files = super::find_markdown_files(ROOT_DIR).unwrap();
+        const SKIPPED_TOP: &str = "_ignored_top.md";
+        const SKIPPED_NESTED: &str = "_ignored_nested.md";
+
+        let file_names: Vec<String> = files.iter().map(|x| x.get_file_name()).collect();
+        assert!(!file_names.contains(&SKIPPED_TOP.to_string()));
+        assert!(!file_names.contains(&SKIPPED_NESTED.to_string()));
     }
-
-    Ok(files)
 }

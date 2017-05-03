@@ -23,6 +23,8 @@ mod templates;
 #[cfg(test)]
 mod test_utils;
 
+use walker::FileList;
+
 /// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
 pub enum ConvError {
@@ -43,25 +45,6 @@ impl From<handlebars::RenderError> for ConvError {
     }
 }
 
-/// Wrapper of a list of Markdown files. With end goal to be able to convey the
-/// hierarchy.
-pub struct FileList {
-    files: Vec<walker::MarkdownFile>,
-}
-
-impl FileList {
-    fn new(files: Vec<walker::MarkdownFile>) -> FileList {
-        let mut sorted_files = files;
-        sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
-        FileList{files: sorted_files}
-    }
-    /// Get all Markdown files
-    fn get_files(&self) -> &Vec<walker::MarkdownFile> {
-        &self.files
-    }
-}
-
-
 const DEF_OUT_DIR: &str = "./out";
 /// Entry function which will perform the entire process for the static site
 /// generation.
@@ -73,7 +56,7 @@ const DEF_OUT_DIR: &str = "./out";
 /// * Read the configuration to determine how the output should be produced
 /// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
-    info!("Generating site from directory: {:?}", root_dir.as_ref());
+    info!("Generating site from directory: {}", root_dir.as_ref().display());
     let all_files = find_all_files(&root_dir);
     let configuration = read_config(&root_dir)?;
     let out_dir = configuration.out_dir().unwrap_or(DEF_OUT_DIR.to_owned());

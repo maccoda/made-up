@@ -18,7 +18,12 @@ specified the default will be used.
 |`stylesheet` | String | Relative path to the style sheet to use for the site|  |
 |`index` | Boolean | Choose if index page is to be generated. | *False* |
 | `out_dir`| String | Path to the output directory. | *./out*|
-| **Currently Unimplemented** ~~`black_list`~~|  Array\<String\> | List of all markdown files to ignore. | [ ] |
+
+## Ignored Files
+Not every file can make the cut for the site, so to make it easy to determine
+which ones do we have a simple convention. All files and directories that are to
+be ignored should begin with an underscore, all other markdown files will be a
+part of the site.
 
 ## TODO
 
