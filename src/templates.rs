@@ -7,11 +7,11 @@ use serde_json::Value;
 
 
 use FileList;
-use config::Configuration;
+use config::RawConfiguration;
 use ConvError;
 
 /// Construct a generated index page for the site from the list of files used.
-pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String, ConvError> {
+pub fn generate_index(files: &FileList, config: &RawConfiguration) -> Result<String, ConvError> {
     const TEMPLATE_NAME: &'static str = "index";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -39,7 +39,7 @@ pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
 pub fn encapsulate_bare_html(content: String,
-                         config: &Configuration)
+                         config: &RawConfiguration)
                          -> Result<String, ConvError> {
     const TEMPLATE_NAME: &'static str = "basic";
     // Build the page from the template just to make it easier for future us
@@ -67,7 +67,7 @@ mod tests {
         use std::path::Path;
         use walker::MarkdownFile;
         use config;
-        let config = config::Configuration::from("resources/mdup.yml");
+        let config = config::RawConfiguration::from("resources/mdup.yml");
         let expected = include_str!("../tests/resources/index_good.html");
         let actual = super::generate_index(&super::FileList::new(
                                                 vec![MarkdownFile::from(&Path::new("second-page.md")),

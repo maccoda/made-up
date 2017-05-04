@@ -20,26 +20,37 @@ specified the default will be used.
 |`stylesheet` | String | Relative path to the style sheet to use for the site|  |
 |`index` | Boolean | Choose if index page is to be generated. | *False* |
 | `out_dir`| String | Path to the output directory. | *./out*|
-| **Currently Unimplemented** ~~`black_list`~~|  Array\<String\> | List of all markdown files to ignore. | [ ] |
+
+## Ignored Files
+Not every file can make the cut for the site, so to make it easy to determine
+which ones do we have a simple convention. All files and directories that are to
+be ignored should begin with an underscore, all other markdown files will be a
+part of the site.
+
+## Index Page
+If the configuration property of `index` is set to *False*, that is the user has
+specified their own index file, Made-Up will expect to find a `index.md` in
+the root directory otherwise it will fail.
 
 ## TODO
 
 ### Functional
-- [X] Perform the basic conversion of markdown to HTML
+- [X] ~~Perform the basic conversion of markdown to HTML~~
 - [ ] Traverse directories to:
   - [ ] Create page hierarchy
-  - [X] Discover all markdown to be used
+  - [X] ~~Discover all markdown to be used~~
 - [ ] Auto-generate the index page as just a listing of all top level pages
 (Partially complete, it generates for all files not just top level)
 - [ ] Shall provide a configuration where:
-  - [ ] Can excluded certain files from being part of the site
+  - [X] ~~Can excluded certain files from being part of the site~~
   - [ ] Can specify user defined index instead of generated
-  - [X] Allow for a stylesheet to be specified
-- [X] Internal linking to sections within same page
-- [X] Linking to other pages (Need to specify how to do this, end in *.html)
+  - [X] ~~Allow for a stylesheet to be specified~~
+- [X] ~~Internal linking to sections within same page~~
+- [X] ~~Linking to other pages (Need to specify how to do this, end in *.html)~~
 - [ ] Copy images
 
 ### Technical
-- [X] Get a logger in here please, no more println
+- [X] ~~Get a logger in here please, no more println~~
 - [ ] Ensure properly handle errors
-- [ ] More testing!!!
+- [ ] More testing!!! Let's try get 95% coverage!
+- [ ] Tidy up code structure (particularly lib.rs)

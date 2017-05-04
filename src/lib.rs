@@ -23,6 +23,8 @@ mod templates;
 #[cfg(test)]
 mod test_utils;
 
+use walker::FileList;
+
 /// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
 pub enum ConvError {
@@ -43,24 +45,7 @@ impl From<handlebars::RenderError> for ConvError {
     }
 }
 
-/// Wrapper of a list of Markdown files. With end goal to be able to convey the
-/// hierarchy.
-pub struct FileList {
-    files: Vec<walker::MarkdownFile>,
-}
-
-impl FileList {
-    fn new(files: Vec<walker::MarkdownFile>) -> FileList {
-        let mut sorted_files = files;
-        sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
-        FileList{files: sorted_files}
-    }
-    /// Get all Markdown files
-    fn get_files(&self) -> &Vec<walker::MarkdownFile> {
-        &self.files
-    }
-}
-
+// TODO Have less functionality in this top level package.
 
 const DEF_OUT_DIR: &str = "./out";
 /// Entry function which will perform the entire process for the static site
@@ -73,10 +58,11 @@ const DEF_OUT_DIR: &str = "./out";
 /// * Read the configuration to determine how the output should be produced
 /// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
+    info!("Generating site from directory: {}", root_dir.as_ref().display());
     let all_files = find_all_files(&root_dir);
     let configuration = read_config(&root_dir)?;
-    let out_dir = configuration.out_dir().unwrap_or(DEF_OUT_DIR.to_owned());
-    if configuration.index().is_none() {
+    let out_dir = handle_config(&root_dir.as_ref(), &configuration)?;
+    if configuration.index().unwrap_or(true) {
         debug!("Index to be generated");
         let index_content = templates::generate_index(&all_files, &configuration).unwrap();
         file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
@@ -112,7 +98,7 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> FileList {
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
 fn create_html<P: AsRef<Path>>(file_name: P,
-                               config: &config::Configuration)
+                               config: &config::RawConfiguration)
                                -> Result<String, ConvError> {
     let mut content = String::new();
     File::open(file_name)
@@ -125,7 +111,7 @@ fn create_html<P: AsRef<Path>>(file_name: P,
 
 // TODO Add some testing on this
 /// Finds the configuration file and deserializes it.
-fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvError> {
+fn read_config<P: AsRef<Path>>(path: P) -> Result<config::RawConfiguration, ConvError> {
     const CONFIG_NAME: &'static str = "mdup.yml";
     let full_path = path.as_ref().to_path_buf();
     debug!("Starting search for configuration file at: {:?}",
@@ -134,7 +120,7 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
     for entry in root_iter {
         if let Ok(file_name) = entry.file_name().into_string() {
             if file_name.eq(CONFIG_NAME) {
-                return Ok(config::Configuration::from(full_path.join(file_name)));
+                return Ok(config::RawConfiguration::from(full_path.join(file_name)));
             }
         }
     }
@@ -143,13 +129,28 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
     Err(ConvError::Fail)
 }
 
+// TODO Test this
+/// Processes the configuration and produces a configuration addressing if
+/// aspects are not present and other implications.
+fn handle_config(root_dir: &AsRef<Path>, config: &config::RawConfiguration) -> Result<String, ConvError> {
+    // If not specified don't generate, if true generate
+    if !config.index().unwrap_or(true) {
+        file_utils::check_file_exists(root_dir.as_ref().join("index.md"));
+        warn!("Expected index.md in the root directory");
+        return Err(ConvError::Fail)
+    }
+    // Check for presence of output directory
+    Ok(config.out_dir().unwrap_or(DEF_OUT_DIR.to_owned()))
+}
+
 #[cfg(test)]
 mod tests {
+    // TODO Nowhere near enough tests here
     use test_utils;
     #[test]
     fn test_create_html() {
         // Read expected
-        let config = super::config::Configuration::from("resources/mdup.yml");
+        let config = super::config::RawConfiguration::from("resources/mdup.yml");
         let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md", &config).unwrap();
         test_utils::compare_string_content(expected.to_string(), actual);
