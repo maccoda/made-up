@@ -8,8 +8,10 @@ fn main() {
                     })
             .unwrap();
     // NOTE Not a very robust way to do it
-    let dir = env::args().nth(1).expect("Usage: made-up <root_directory>");
-    made_up::generate_site(dir).unwrap();
+    // TODO Add in help display on -h or --help
+    // .expect("Usage: made-up <root_directory>");
+    let dir = env::args().nth(1).unwrap_or(".");
+    made_up::generate_site(dir).unwrap_or_else(|x| println!("{:?}", x));
 }
 
 use log::{LogLevel, LogRecord, LogMetadata};
