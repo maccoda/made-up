@@ -1,3 +1,3 @@
 stylesheet: "style.css"
-index: false
+gen_index: false
 out_dir: "output"

@@ -18,7 +18,7 @@ specified the default will be used.
 | Field | Type | Description | Default |
 |---|---| --- | --- |
 |`stylesheet` | String | Relative path to the style sheet to use for the site|  |
-|`index` | Boolean | Choose if index page is to be generated. | *False* |
+|`gen_index` | Boolean | Choose if index page is to be generated. | *False* |
 | `out_dir`| String | Path to the output directory. | *./out*|
 
 ## Ignored Files
@@ -43,7 +43,7 @@ the root directory otherwise it will fail.
 (Partially complete, it generates for all files not just top level)
 - [ ] Shall provide a configuration where:
   - [X] ~~Can excluded certain files from being part of the site~~
-  - [ ] Can specify user defined index instead of generated
+  - [X] ~~Can specify user defined index instead of generated~~
   - [X] ~~Allow for a stylesheet to be specified~~
 - [X] ~~Internal linking to sections within same page~~
 - [X] ~~Linking to other pages (Need to specify how to do this, end in *.html)~~

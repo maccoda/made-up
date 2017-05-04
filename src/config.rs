@@ -7,7 +7,7 @@ use super::file_utils;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawConfiguration {
     stylesheet: Option<String>,
-    index: Option<bool>,
+    gen_index: Option<bool>,
     out_dir: Option<String>,
 }
 
@@ -15,8 +15,18 @@ pub struct RawConfiguration {
 // Mirror of `RawConfiguration` but has resolved all `Option`s.
 pub struct Configuration {
     stylesheet: String,
-    index: bool,
+    gen_index: bool,
     out_dir: String,
+}
+
+impl Default for Configuration {
+    fn default() -> Configuration {
+        Configuration {
+            stylesheet: String::new(),
+            gen_index: false,
+            out_dir: "out".to_string(),
+        }
+    }
 }
 
 impl RawConfiguration {
@@ -31,8 +41,8 @@ impl RawConfiguration {
     pub fn stylesheet(&self) -> Option<String> {
         self.stylesheet.clone()
     }
-    pub fn index(&self) -> Option<bool> {
-        self.index
+    pub fn gen_index(&self) -> Option<bool> {
+        self.gen_index
     }
     pub fn out_dir(&self) -> Option<String> {
         self.out_dir.clone()
@@ -46,14 +56,14 @@ mod tests {
     fn test_read() {
         let actual = RawConfiguration::from("tests/resources/test_conf.yml");
         assert_eq!(actual.stylesheet, Some("test_style.css".to_string()));
-        assert_eq!(actual.index, None);
+        assert_eq!(actual.gen_index, None);
     }
 
     #[test]
     fn test_read_all() {
         let actual = RawConfiguration::from("tests/resources/test_conf_all.yml");
         assert_eq!(actual.stylesheet, Some("style.css".to_string()));
-        assert_eq!(actual.index, Some(false));
+        assert_eq!(actual.gen_index, Some(false));
         assert_eq!(actual.out_dir, Some("output".to_string()));
     }
 }

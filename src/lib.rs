@@ -62,7 +62,7 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     let all_files = find_all_files(&root_dir);
     let configuration = read_config(&root_dir)?;
     let out_dir = handle_config(&root_dir.as_ref(), &configuration)?;
-    if configuration.index().unwrap_or(true) {
+    if configuration.gen_index().unwrap_or(false) {
         debug!("Index to be generated");
         let index_content = templates::generate_index(&all_files, &configuration).unwrap();
         file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
@@ -134,7 +134,8 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::RawConfiguration, Conv
 /// aspects are not present and other implications.
 fn handle_config(root_dir: &AsRef<Path>, config: &config::RawConfiguration) -> Result<String, ConvError> {
     // If not specified don't generate, if true generate
-    if !config.index().unwrap_or(true) {
+    if !config.gen_index().unwrap_or(false) {
+        info!("Looking for {:?}", root_dir.as_ref().join("index.md"));
         file_utils::check_file_exists(root_dir.as_ref().join("index.md"));
         warn!("Expected index.md in the root directory");
         return Err(ConvError::Fail)
