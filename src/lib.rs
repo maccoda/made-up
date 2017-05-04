@@ -59,7 +59,7 @@ const DEF_OUT_DIR: &str = "./out";
 /// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     info!("Generating site from directory: {}", root_dir.as_ref().display());
-    let all_files = find_all_files(&root_dir);
+    let all_files = find_all_files(&root_dir)?;
     let configuration = read_config(&root_dir)?;
     let out_dir = handle_config(&root_dir.as_ref(), &configuration)?;
     if configuration.gen_index().unwrap_or(false) {
@@ -86,13 +86,12 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
 
 
 /// Starting at the root directory provided, find all Markdown files within in.
-fn find_all_files<P: AsRef<Path>>(root_dir: P) -> FileList {
-    // TODO Make this handle errors and document
-    let files = walker::find_markdown_files(root_dir).unwrap();
+fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<FileList, ConvError> {
+    let files = walker::find_markdown_files(root_dir)?;
     for file in &files {
         debug!("{:?}", file);
     }
-    FileList::new(files)
+    Ok(FileList::new(files))
 }
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct

@@ -10,7 +10,7 @@ fn main() {
     // NOTE Not a very robust way to do it
     // TODO Add in help display on -h or --help
     // .expect("Usage: made-up <root_directory>");
-    let dir = env::args().nth(1).unwrap_or(".");
+    let dir = env::args().nth(1).unwrap_or(".".to_string());
     made_up::generate_site(dir).unwrap_or_else(|x| println!("{:?}", x));
 }
 

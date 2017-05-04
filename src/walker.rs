@@ -66,6 +66,10 @@ fn is_excluded(entry: &DirEntry) -> bool {
     entry.file_name().to_str().map(|s| s.starts_with("_")).unwrap_or(false)
 }
 
+/// Walks the specified root directory to find all Markdown files and returns
+/// the list of discovered files. A file is added if it has a file extension of
+/// `*.md` or `*.MD`. Files will be ignored if they begin with an underscore,
+/// this also includes any Markdown files beginning with an underscore.
 pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFile>, io::Error> {
     let mut files = vec![];
     let files_to_check = WalkDir::new(root_dir).into_iter().filter_entry(|file| !is_excluded(file));
