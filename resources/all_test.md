@@ -6,7 +6,7 @@
 * Point three
 
 ## Here is an image
-![ferris](rustacean-orig-noshadow.png)
+![ferris](images/rustacean-orig-noshadow.png)
 
 ## Now for some code
 ### Inline

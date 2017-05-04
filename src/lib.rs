@@ -74,12 +74,18 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
 
     // Copy across the stylesheet
     configuration.stylesheet().and_then(|x| {
-        let source = root_dir.as_ref().join(&x);
-        debug!("Source stylesheet {:?}", source);
-        let dest = out_dir.to_owned() + "/" + &x;
-        debug!("Dest stylesheet: {:?}", dest);
-        fs::copy(source, dest).ok()}
+        file_utils::copy_file(&root_dir, &out_dir, &x).ok()}
     ).unwrap();
+
+    // Copy across the images
+    let images_source = root_dir.as_ref().join("images");
+    let images_dest = format!("{}/images", out_dir);
+    fs::create_dir_all(&images_dest)?;
+    for entry in fs::read_dir(format!("{}/images", root_dir.as_ref().to_str().unwrap()))? {
+        let entry = entry?;
+        info!("Copying {:?}", entry.file_name());
+        file_utils::copy_file(&images_source, &images_dest, &entry.file_name().into_string().unwrap());
+    }
     Ok(())
 }
 

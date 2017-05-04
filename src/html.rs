@@ -109,6 +109,7 @@ pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
 
 #[cfg(test)]
 mod tests {
+    use test_utils;
     #[test]
     fn test_name_to_id() {
         let actual = super::name_to_id("A very lOng name or Heading");
@@ -130,6 +131,6 @@ mod tests {
 
         let actual = super::consume(parser);
         let expected = include_str!("../tests/resources/all_test_raw_good.html");
-        assert_eq!(expected, actual);
+        test_utils::compare_string_content(expected.to_string(), actual);
     }
 }

@@ -21,6 +21,9 @@ fn test_it() {
     let actual = read_from_file("out/second-page.html");
     compare_string_content(expected.to_string(), actual.to_string());
 
+    // Ensure the images were move across successfully
+    assert!(check_file_exists("out/images/rustacean-orig-noshadow.png"));
+
     fs::remove_dir_all("out").unwrap();
 }
 
