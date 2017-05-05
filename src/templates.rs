@@ -7,11 +7,11 @@ use serde_json::Value;
 
 
 use FileList;
-use config::RawConfiguration;
+use config::Configuration;
 use ConvError;
 
 /// Construct a generated index page for the site from the list of files used.
-pub fn generate_index(files: &FileList, config: &RawConfiguration) -> Result<String, ConvError> {
+pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String, ConvError> {
     const TEMPLATE_NAME: &'static str = "index";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -22,7 +22,7 @@ pub fn generate_index(files: &FileList, config: &RawConfiguration) -> Result<Str
 
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     data.insert("stylesheet".to_string(),
-                Value::String(config.stylesheet().unwrap_or("".to_owned())));
+                Value::String(config.stylesheet()));
     // TODO Get the title perhaps from the configuration
     data.insert("title".to_string(),
                 Value::String("Index Generated Title".to_string()));
@@ -39,7 +39,7 @@ pub fn generate_index(files: &FileList, config: &RawConfiguration) -> Result<Str
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
 pub fn encapsulate_bare_html(content: String,
-                         config: &RawConfiguration)
+                         config: &Configuration)
                          -> Result<String, ConvError> {
     const TEMPLATE_NAME: &'static str = "basic";
     // Build the page from the template just to make it easier for future us
@@ -50,8 +50,7 @@ pub fn encapsulate_bare_html(content: String,
         .unwrap();
 
     let mut data: BTreeMap<String, String> = BTreeMap::new();
-    data.insert("stylesheet".to_string(), config.stylesheet().unwrap_or("".to_owned()));
-    // TODO Get the title from the first heading
+    data.insert("stylesheet".to_string(), config.stylesheet());
     data.insert("title".to_string(), "Generated Title".to_string());
     data.insert("md_content".to_string(), content);
 
@@ -67,7 +66,7 @@ mod tests {
         use std::path::Path;
         use walker::MarkdownFile;
         use config;
-        let config = config::RawConfiguration::from("resources/mdup.yml");
+        let config = config::Configuration::from("resources/mdup.yml");
         let expected = include_str!("../tests/resources/index_good.html");
         let actual = super::generate_index(&super::FileList::new(
                                                 vec![MarkdownFile::from(&Path::new("second-page.md")),

@@ -30,13 +30,12 @@ pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P, content_to_write: String,
     Ok(())
 }
 
-// TODO Loo into how to use the same type parameter letter
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
 pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P, dest_dir: &Q, file_name: &String) -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
     info!("Performing copy {:?} -> {:?}", source, dest);
-    let result = fs::copy(source, dest)?;
+    let _ = fs::copy(source, dest)?;
     Ok(())
 }
 
