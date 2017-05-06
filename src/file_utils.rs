@@ -39,6 +39,7 @@ pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P, dest_dir: &Q, f
     Ok(())
 }
 
+#[cfg(not(feature = "ci"))]
 #[cfg(test)]
 mod tests {
     use std::fs;
