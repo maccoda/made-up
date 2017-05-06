@@ -1,42 +1,78 @@
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
+
 environment:
-  RUST_DIR: C:\Rust\
+  global:
+    RUST_VERSION: stable
+
+    CRATE_NAME: made_up
+
   matrix:
-  - TARGET: x86_64-pc-windows-msvc
-    BITS: 64
-  - TARGET: i686-pc-windows-msvc
-    BITS: 32
-  - TARGET: i686-pc-windows-gnu
-    BITS: 32
+    # MinGW
+    - TARGET: i686-pc-windows-gnu
+    - TARGET: x86_64-pc-windows-gnu
 
-shallow_clone: true
+    # MSVC
+    - TARGET: i686-pc-windows-msvc
+    - TARGET: x86_64-pc-windows-msvc
 
-cache:
-  - target
-  - '%USERPROFILE%\.cargo'
+    # Testing other channels
+    - TARGET: x86_64-pc-windows-gnu
+      RUST_VERSION: nightly
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_VERSION: nightly
 
 install:
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-nightly-${env:TARGET}.msi"
-  - msiexec /i rust-nightly-%TARGET%.msi /quiet /passive /qn /norestart INSTALLDIR=%RUST_DIR%
-  - SET PATH=%PATH%;%RUST_DIR%\bin
-  - SET PATH=%PATH%;C:\msys64\mingw%BITS%\bin;C:\msys64\usr\bin
-  - rustc -V
+  - ps: >-
+      If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw64\bin'
+      } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw32\bin'
+      }
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -Vv
   - cargo -V
 
-build: false
-
 test_script:
-  - cargo test
-  # - cargo build --release --bin made-up
+  # we don't run the "test phase" when doing deploys
+  - if [%APPVEYOR_REPO_TAG%]==[false] (
+      cargo build --target %TARGET% &&
+      cargo build --target %TARGET% --release &&
+      cargo test --target %TARGET% &&
+      cargo test --target %TARGET% --release
+    )
 
-# artifacts:
-#   - path: target/release/made-up
-#     name: Executable
+before_deploy:
+  - cargo rustc --target %TARGET% --release --bin %CRATE_NAME% -- -C lto
+  - ps: ci\before_deploy.ps1
 
-# deploy:
-#   description: "Release"
-#   auth_token:
-#     secure: sFyLFekF5CK3vWnsk/FRNDQ0EP2j33fxZgNN07qQJnYkTcEFHN/xFak58pZwSn7Z
-#     artifact: target/release/made-up
-#   on:
-#     branch: master                 # release from master branch only
-#     appveyor_repo_tag: true
+deploy:
+  artifact: /.*\.zip/
+  auth_token:
+    secure: sFyLFekF5CK3vWnsk/FRNDQ0EP2j33fxZgNN07qQJnYkTcEFHN/xFak58pZwSn7
+  description: ''
+  on:
+    RUST_VERSION: stable
+    appveyor_repo_tag: true
+  provider: GitHub
+
+cache:
+  - C:\Users\appveyor\.cargo\registry
+  - target
+
+branches:
+  only:
+    # Release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+    - develop
+    - build
+
+notifications:
+  - provider: Email
+    on_build_success: false
+
+# Building is done in the test phase, so we disable Appveyor's build phase.
+build: false

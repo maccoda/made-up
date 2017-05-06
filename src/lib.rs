@@ -60,7 +60,8 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     info!("Generating site from directory: {}", root_dir.as_ref().display());
     let all_files = find_all_files(&root_dir)?;
     let configuration = read_config(&root_dir)?;
-    let out_dir = handle_config(&root_dir.as_ref(), &configuration)?;
+    handle_config(&root_dir.as_ref(), &configuration)?;
+    let out_dir = configuration.out_dir();
     if configuration.gen_index() {
         debug!("Index to be generated");
         let index_content = templates::generate_index(&all_files, &configuration).unwrap();
@@ -134,7 +135,7 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
 // TODO Test this
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
-fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<String, ConvError> {
+fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<(), ConvError> {
     // If not specified don't generate, if true generate
     if !config.gen_index() {
         info!("Looking for {:?}", root_dir.as_ref().join("index.md"));
@@ -143,7 +144,7 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
         return Err(ConvError::Fail)
     }
     // Check for presence of output directory
-    Ok(config.out_dir())
+    Ok(())
 }
 
 #[cfg(test)]
@@ -156,6 +157,6 @@ mod tests {
         let config = super::config::Configuration::from("resources/mdup.yml");
         let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md", &config).unwrap();
-        test_utils::compare_string_content(expected.to_string(), actual);
+        test_utils::compare_string_content(expected, &actual);
     }
 }

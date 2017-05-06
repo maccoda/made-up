@@ -131,6 +131,6 @@ mod tests {
 
         let actual = super::consume(parser);
         let expected = include_str!("../tests/resources/all_test_raw_good.html");
-        test_utils::compare_string_content(expected.to_string(), actual);
+        test_utils::compare_string_content(expected, &actual);
     }
 }

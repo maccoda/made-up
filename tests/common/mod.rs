@@ -1,3 +1,10 @@
+// *****************************
+// NOTE NOTE NOTE
+// *****************************
+// This file is just a copy of file_utils.rs and test_utils.rs
+// Will hopefully work out a better way to do this but for now this will do.
+// Perhaps make it part of the build step to keep them in sync
+
 use std::fs::{self, File};
 use std::io::{Read, Write, self};
 use std::path::Path;
@@ -34,54 +41,20 @@ pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P, content_to_write: String,
 pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P, dest_dir: &Q, file_name: &String) -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
-    info!("Performing copy {:?} -> {:?}", source, dest);
     let _ = fs::copy(source, dest)?;
     Ok(())
 }
 
-#[cfg(not(feature = "ci"))]
-#[cfg(test)]
-mod tests {
-    use std::fs;
+/// Strips all whitespace anywhere within the string. Useful for comparing
+/// strings when only caring about content.
+fn strip_all_whitespace(string: &str) -> String {
+    string.chars().filter(|x| !x.is_whitespace()).collect()
+}
 
-    const CONTENT: &'static str = "This is a test";
-    const FILE_NAME: &'static str = "test_out.txt";
-    // I do admit there is huge dependencies here but meh.
-    #[test]
-    fn test_write_and_read_file() {
-        super::write_to_file(FILE_NAME, String::from(CONTENT));
-        // Check it exists
-        assert!(fs::metadata(FILE_NAME).is_ok());
-        // Check is not a directory
-        assert!(!fs::metadata(FILE_NAME).unwrap().is_dir());
+/// Asserts the two strings provided have the same non-whitespace content.
+pub fn compare_string_content(expected: &str, actual: &str) {
+    let expected = strip_all_whitespace(&expected);
+    let actual = strip_all_whitespace(&actual);
 
-        assert_eq!(CONTENT, super::read_from_file(FILE_NAME));
-
-        fs::remove_file(FILE_NAME).unwrap();
-    }
-
-    #[test]
-    fn test_check_file() {
-        // Will check I exist
-        assert!(super::check_file_exists("src/file_utils.rs"));
-    }
-
-    #[test]
-    fn test_dir_exists_write() {
-        const DIR: &str = "src";
-        super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
-        assert_eq!(CONTENT, super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
-
-        fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
-    }
-
-    #[test]
-    fn test_dir_write() {
-        const DIR: &str = "awoogaa";
-        super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
-        assert_eq!(CONTENT, super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
-
-        fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
-        fs::remove_dir(DIR).unwrap();
-    }
+    assert_eq!(expected, actual);
 }
