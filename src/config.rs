@@ -3,7 +3,8 @@ use serde_yaml;
 
 use super::file_utils;
 
-// TODO Look into what we actully need here
+/// Configuration type to be serialized. Allows for keys to not be present in
+/// the configuration file.
 #[derive(Serialize, Deserialize, Debug)]
 struct RawConfiguration {
     stylesheet: Option<String>,
@@ -12,12 +13,14 @@ struct RawConfiguration {
 }
 
 impl RawConfiguration {
+    /// Construct a `RawConfiguration` from the provided path. Will return an
+    /// error if unable to parse the YAML file.
     fn from<P: AsRef<Path>>(config_path: P) -> Result<RawConfiguration, serde_yaml::Error> {
         serde_yaml::from_str(&file_utils::read_from_file(config_path))
     }
 }
 
-// Mirror of `RawConfiguration` but has resolved all `Option`s.
+// Mirror of `RawConfiguration` but has resolved all `Option`s to their default values.
 #[derive(Debug)]
 pub struct Configuration {
     stylesheet: String,
@@ -36,25 +39,32 @@ impl Default for Configuration {
 }
 
 impl Configuration {
-    pub fn from<P: AsRef<Path>>(path: P) -> Configuration {
+    /// Obtain a `Configuration` from the path provided.
+    pub fn from<P: AsRef<Path>>(path: P) -> Result<Configuration, serde_yaml::Error> {
         // TODO Add error handling
         debug!("Reading configuration file");
-        let raw_config = RawConfiguration::from(path).unwrap();
+        let raw_config = RawConfiguration::from(path)?;
         let def_config = Configuration::default();
         let stylesheet = raw_config.stylesheet.unwrap_or(def_config.stylesheet);
         let gen_index = raw_config.gen_index.unwrap_or(def_config.gen_index);
         let out_dir = raw_config.out_dir.unwrap_or(def_config.out_dir);
-        let config = Configuration {stylesheet, gen_index, out_dir};
-        info!("{:?}", config);
-        config
+        let config = Configuration {
+            stylesheet,
+            gen_index,
+            out_dir,
+        };
+        debug!("{:?}", config);
+        Ok(config)
     }
-
+    /// Returns the stylesheet value of the configuration
     pub fn stylesheet(&self) -> String {
         self.stylesheet.clone()
     }
+    /// Returns the gen_index value of the configuration
     pub fn gen_index(&self) -> bool {
         self.gen_index
     }
+    /// Returns the out_dir value of the configuration
     pub fn out_dir(&self) -> String {
         self.out_dir.clone()
     }
@@ -62,7 +72,7 @@ impl Configuration {
 
 #[cfg(test)]
 mod tests {
-    use super::{Configuration,RawConfiguration};
+    use super::{Configuration, RawConfiguration};
     #[test]
     fn test_raw_read() {
         let actual = RawConfiguration::from("tests/resources/test_conf.yml").unwrap();
@@ -81,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_read() {
-        let actual = Configuration::from("tests/resources/test_conf.yml");
+        let actual = Configuration::from("tests/resources/test_conf.yml").unwrap();
         assert_eq!(actual.stylesheet, "test_style.css".to_string());
         assert_eq!(actual.gen_index, false);
         assert_eq!(actual.out_dir, "out".to_string());
@@ -89,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_read_all() {
-        let actual = Configuration::from("tests/resources/test_conf_all.yml");
+        let actual = Configuration::from("tests/resources/test_conf_all.yml").unwrap();
         assert_eq!(actual.stylesheet, "style.css".to_string());
         assert_eq!(actual.gen_index, false);
         assert_eq!(actual.out_dir, "output".to_string());

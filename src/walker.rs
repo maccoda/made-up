@@ -15,7 +15,7 @@ impl FileList {
     pub fn new(files: Vec<MarkdownFile>) -> FileList {
         let mut sorted_files = files;
         sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
-        FileList{files: sorted_files}
+        FileList { files: sorted_files }
     }
     /// Get all Markdown files
     pub fn get_files(&self) -> &Vec<MarkdownFile> {
@@ -63,7 +63,11 @@ fn is_accepted_markdown_file(path: &Path) -> bool {
 /// The check just determines if the file or directory begins with an
 /// underscore.
 fn is_excluded(entry: &DirEntry) -> bool {
-    entry.file_name().to_str().map(|s| s.starts_with("_")).unwrap_or(false)
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.starts_with("_"))
+        .unwrap_or(false)
 }
 
 /// Walks the specified root directory to find all Markdown files and returns
@@ -72,7 +76,9 @@ fn is_excluded(entry: &DirEntry) -> bool {
 /// this also includes any Markdown files beginning with an underscore.
 pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFile>, io::Error> {
     let mut files = vec![];
-    let files_to_check = WalkDir::new(root_dir).into_iter().filter_entry(|file| !is_excluded(file));
+    let files_to_check = WalkDir::new(root_dir)
+        .into_iter()
+        .filter_entry(|file| !is_excluded(file));
     for entry in files_to_check {
         let entry = entry?;
         let path = entry.path();
@@ -95,7 +101,7 @@ mod tests {
         assert_eq!(file.get_file_name(), "tester");
     }
 
-     #[test]
+    #[test]
     fn test_find_markdown_files() {
         const ROOT_DIR: &str = "resources";
         let files = super::find_markdown_files(ROOT_DIR).unwrap();

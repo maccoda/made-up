@@ -1,5 +1,5 @@
 use std::fs::{self, File};
-use std::io::{Read, Write, self};
+use std::io::{self, Read, Write};
 use std::path::Path;
 
 /// Writes the provided content to a file at the path provided.
@@ -24,14 +24,20 @@ pub fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {
 
 /// Use to write to a file that is in a separate directory. This will ensure
 /// that directory is created and create if required before writing to the file.
-pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P, content_to_write: String, dir: P) -> io::Result<()>{
+pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P,
+                                         content_to_write: String,
+                                         dir: P)
+                                         -> io::Result<()> {
     fs::create_dir_all(&dir)?;
     write_to_file(dir.as_ref().join(file_name), content_to_write);
     Ok(())
 }
 
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
-pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P, dest_dir: &Q, file_name: &String) -> Result<(), io::Error> {
+pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
+                                                 dest_dir: &Q,
+                                                 file_name: &String)
+                                                 -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
     info!("Performing copy {:?} -> {:?}", source, dest);
@@ -70,7 +76,8 @@ mod tests {
     fn test_dir_exists_write() {
         const DIR: &str = "src";
         super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
-        assert_eq!(CONTENT, super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
+        assert_eq!(CONTENT,
+                   super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
 
         fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
     }
@@ -79,7 +86,8 @@ mod tests {
     fn test_dir_write() {
         const DIR: &str = "awoogaa";
         super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
-        assert_eq!(CONTENT, super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
+        assert_eq!(CONTENT,
+                   super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
 
         fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
         fs::remove_dir(DIR).unwrap();

@@ -21,9 +21,8 @@ pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String
         .unwrap();
 
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
-    data.insert("stylesheet".to_string(),
-                Value::String(config.stylesheet()));
-    // TODO Get the title perhaps from the configuration
+    data.insert("stylesheet".to_string(), Value::String(config.stylesheet()));
+    // NOTE Get the title perhaps from the configuration
     data.insert("title".to_string(),
                 Value::String("Index Generated Title".to_string()));
     data.insert("element".to_string(),
@@ -38,9 +37,7 @@ pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String
 }
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
-pub fn encapsulate_bare_html(content: String,
-                         config: &Configuration)
-                         -> Result<String, ConvError> {
+pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String, ConvError> {
     const TEMPLATE_NAME: &'static str = "basic";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -66,11 +63,11 @@ mod tests {
         use std::path::Path;
         use walker::MarkdownFile;
         use config;
-        let config = config::Configuration::from("resources/mdup.yml");
+        let config = config::Configuration::from("resources/mdup.yml").unwrap();
         let expected = include_str!("../tests/resources/index_good.html");
         let actual = super::generate_index(&super::FileList::new(
-                                                vec![MarkdownFile::from(&Path::new("second-page.md")),
-                                                            MarkdownFile::from(&Path::new("all_test.md"))],
+                                        vec![MarkdownFile::from(&Path::new("second-page.md")),
+                                             MarkdownFile::from(&Path::new("all_test.md"))],
         ), &config).unwrap();
         test_utils::compare_string_content(expected, &actual);
     }

@@ -28,9 +28,10 @@ use walker::FileList;
 /// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
 pub enum ConvError {
-    Fail,
+    Fail(String),
     IO(std::io::Error),
     Template(handlebars::RenderError),
+    Config(serde_yaml::Error),
 }
 
 impl From<std::io::Error> for ConvError {
@@ -42,6 +43,12 @@ impl From<std::io::Error> for ConvError {
 impl From<handlebars::RenderError> for ConvError {
     fn from(error: handlebars::RenderError) -> ConvError {
         ConvError::Template(error)
+    }
+}
+
+impl From<serde_yaml::Error> for ConvError {
+    fn from(error: serde_yaml::Error) -> ConvError {
+        ConvError::Config(error)
     }
 }
 
@@ -57,7 +64,8 @@ impl From<handlebars::RenderError> for ConvError {
 /// * Read the configuration to determine how the output should be produced
 /// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
-    info!("Generating site from directory: {}", root_dir.as_ref().display());
+    info!("Generating site from directory: {}",
+          root_dir.as_ref().display());
     let all_files = find_all_files(&root_dir)?;
     let configuration = read_config(&root_dir)?;
     handle_config(&root_dir.as_ref(), &configuration)?;
@@ -69,7 +77,9 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     }
     for file in all_files.get_files() {
         let result = create_html(file.get_path(), &configuration).unwrap();
-        file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()), result, out_dir.to_owned())?;
+        file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()),
+                                      result,
+                                      out_dir.to_owned())?;
     }
 
     // Copy across the stylesheet
@@ -82,7 +92,9 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     for entry in fs::read_dir(format!("{}/images", root_dir.as_ref().to_str().unwrap()))? {
         let entry = entry?;
         info!("Copying {:?}", entry.file_name());
-        file_utils::copy_file(&images_source, &images_dest, &entry.file_name().into_string().unwrap())?;
+        file_utils::copy_file(&images_source,
+                              &images_dest,
+                              &entry.file_name().into_string().unwrap())?;
     }
     Ok(())
 }
@@ -123,25 +135,25 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
     for entry in root_iter {
         if let Ok(file_name) = entry.file_name().into_string() {
             if file_name.eq(CONFIG_NAME) {
-                return Ok(config::Configuration::from(full_path.join(file_name)));
+                return Ok(config::Configuration::from(full_path.join(file_name))?);
             }
         }
     }
-    warn!("Configuration file: {} not found in root directory",
-          CONFIG_NAME);
-    Err(ConvError::Fail)
+    Err(ConvError::Fail(format!("Configuration file: {} not found in {}",
+                                CONFIG_NAME,
+                                fs::canonicalize(path).unwrap().display())))
 }
 
-// TODO Test this
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
-fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<(), ConvError> {
+fn handle_config(root_dir: &AsRef<Path>,
+                 config: &config::Configuration)
+                 -> Result<(), ConvError> {
     // If not specified don't generate, if true generate
     if !config.gen_index() {
         info!("Looking for {:?}", root_dir.as_ref().join("index.md"));
         file_utils::check_file_exists(root_dir.as_ref().join("index.md"));
-        warn!("Expected index.md in the root directory");
-        return Err(ConvError::Fail)
+        return Err(ConvError::Fail("Expected index.md in the root directory".into()));
     }
     // Check for presence of output directory
     Ok(())
@@ -154,7 +166,7 @@ mod tests {
     #[test]
     fn test_create_html() {
         // Read expected
-        let config = super::config::Configuration::from("resources/mdup.yml");
+        let config = super::config::Configuration::from("resources/mdup.yml").unwrap();
         let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md", &config).unwrap();
         test_utils::compare_string_content(expected, &actual);
