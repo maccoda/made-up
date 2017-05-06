@@ -146,9 +146,7 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
 
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
-fn handle_config(root_dir: &AsRef<Path>,
-                 config: &config::Configuration)
-                 -> Result<(), ConvError> {
+fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<(), ConvError> {
     // If not specified don't generate, if true generate
     if !config.gen_index() {
         info!("Looking for {:?}", root_dir.as_ref().join("index.md"));

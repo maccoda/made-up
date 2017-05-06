@@ -4,7 +4,7 @@
 // This file is just a copy of file_utils.rs and test_utils.rs
 // Will hopefully work out a better way to do this but for now this will do.
 // Perhaps make it part of the build step to keep them in sync
-
+#![allow(dead_code)]
 use std::fs::{self, File};
 use std::io::{Read, Write, self};
 use std::path::Path;

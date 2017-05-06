@@ -1,9 +1,5 @@
 extern crate made_up;
-
-use std::fs::{self, File};
-use std::io::{Read};
-use std::path::Path;
-use std::env;
+use std::fs;
 
 mod common;
 
