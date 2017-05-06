@@ -1,124 +1,41 @@
-# Based on the "trust" template v0.1.1
-# https://github.com/japaric/trust/tree/v0.1.1
-
-dist: trusty
 language: rust
-services: docker
-sudo: required
-
-env:
-  global:
-    - CRATE_NAME=made_up
+rust:
+    - stable
+    - beta
+    - nightly
 
 matrix:
-  include:
-    # Linux
-    - env: TARGET=i686-unknown-linux-gnu
-    - env: TARGET=i686-unknown-linux-musl
-    - env: TARGET=x86_64-unknown-linux-gnu
-    - env: TARGET=x86_64-unknown-linux-musl
+    allow_failures:
+        - rust: nightly
 
-    # OSX
-    # - env: TARGET=i686-apple-darwin
-    #   os: osx
-    - env: TARGET=x86_64-apple-darwin
-      os: osx
+before_install:
+    - sudo apt-get update
 
-    # *BSD
-    # - env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
-    # - env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
-    # - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
+# script:
+#     # - cargo build --release --bin made-up
+#     - cargo test
 
-    # Other architectures
-    # - env: TARGET=aarch64-unknown-linux-gnu
-    # - env: TARGET=armv7-unknown-linux-gnueabihf
-    # - env: TARGET=mips-unknown-linux-gnu
-    # - env: TARGET=mips64-unknown-linux-gnuabi64
-    # - env: TARGET=mips64el-unknown-linux-gnuabi64
-    # - env: TARGET=mipsel-unknown-linux-gnu
-    # - env: TARGET=powerpc-unknown-linux-gnu
-    # - env: TARGET=powerpc64-unknown-linux-gnu
-    # - env: TARGET=powerpc64le-unknown-linux-gnu
-    # - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
 
-    # Testing other channels
-    - env: TARGET=x86_64-unknown-linux-gnu
-      rust: nightly
-    # - env: TARGET=x86_64-apple-darwin
-    #   os: osx
-    #   rust: nightly
-
-before_install: set -e
-
-install:
-  - sh ci/install.sh
-  - source ~/.cargo/env || true
-
-script:
-  - bash ci/script.sh
-
-after_script: set +e
-
-before_deploy:
-  - sh ci/before_deploy.sh
-
-#deploy:
-#  api_key:
-#    secure: A9v3PIzQQ4U08OHFmDPQzNXbNHEb7YHyLXCvMF+dXFuNSvhUNlmQYykxqUf3dvikhJL2/bsZ14umm7ni7fQh0tGwJ4+lPpNzYAcweGgNXnWvjTpY6ovuRbr3gs4/srkyxp/GBDmSW5L8wFN3hKCB+Lm0YnIPB9IA2afP8a30+8VTXT9nv7pNqGny4ilN41ycr4DZi3sQoXdbruy7ClN7gsWW/GUiudBccHVIjmTapOFKLwZHODaUl/1/RDWQzh+i+17e1ivXuJPktDSrqmHPTZ15OjklnHKd6t179ry6VkGRg4R/R/YukVIqGzeaXGWAwdAQ5gE8cjGZghJLVi2jkDBJ85z8MvT+zLZLyliiuhLc/X8y7mkE1n0FKFtXXzFVt0l7V1LaEKbIbiV6XX3jsir4qgkqWjPHBZqO5mkGNFS16Dmt30/ZtEPAzXiINFXbWuWrpQ/LZ4NSto8IMrRTcoyDbAga/KYxJiNIeVuCe1E9dbytDM7K0GLtxJTul/WnnSeI6r//EFyC4bxYjyHhCXaag4q14KM+ak4rB0QgxsYzyGuh2MqyCoVj8YJLjLdKnL/SV7W7LPD40xlxvI6VCYTVi2ILHwL6vCxpukXYteX0c5IAIWkISDKu6nNBEgmCHXXPSqYSrgE5g7/QoCQHI8++nR8iKe0s7TWxZRydby8=
-#  file_glob: true
-#  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
-#  on:
-#    condition: $TRAVIS_RUST_VERSION = stable
-#    tags: true
-#  provider: releases
-#  skip_cleanup: true
-
-cache: cargo
-before_cache:
-  # Travis can't cache files that are not readable by "others"
-  - chmod -R a+r $HOME/.cargo
-
-branches:
-  only:
-    # release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
-    - develop
-    - build
-
-notifications:
-  email:
-    on_success: never
-deploy:
-  provider: releases
-  api_key:
-    secure: fPk+Xm/OC9z5gHc1iKS//vJuSzPA3/G3DV0gioSkA7JQ1KksxZupHkgqDsLj+uoXn1Zd8R2+z6ezPwnac9NfB0swCwq3eIEIsUsornEMWyssXtoJo7O36OajFHeDmMfaXVnF+OsWB//U9V1Xf6rciiUZ+8+2TUFR7qN+WdHtF4Z+jtE1o+knZraTYAdaU974zaODn4vafzSBd3Aolkzh4sqUn0R9os9esHXUvHKEIiY7v0lessPMOwI15P2PgLH6TAX5v/Wm6A6b5f2RW++MpH7zGukb6IP269JTbFcoE2SnZx3mT2BRf8zSqc1itCselie9QMe8Wt1WNPRSHmfFF/iELUqEzc/6C7RWJVGtiGE5BcDFBHHydLnBa4uguIE8I9lCgtdAFkh7m1wTR/CfuwyeeGhSj1UfsK6sRkTcXrObQpNskfTZdT9x8JRGmU7z5zSrTD+7XvwcHKsiRLwIYencLas0Ptnxreehk8KU+g6gRSr8tu5iMa8q1sZxwHEESzlNmKLy21wxlE0rn+JsYBZZb+euRlWFSTVXVo93RFDn997X/6uNNKeEt89Oo9ZEDTfSYK9Av+Wle1/dvMYn9hjsTVno4yCZ0AIQ9CeV2Zj61IhsO6fOyjx3DQ+zCwZC496eThIUJx1bBQ1N5N4nKgx96wvsUhR4VEfgSaAhMXU=
-  file: made-up
-  on:
-    tags: true
-
-# CodeCov steps. Currently failing.
-# addons:
-#   apt:
-#     packages:
-#       - libcurl4-openssl-dev
-#       - libelf-dev
-#       - libdw-dev
-#       - cmake
-#       - gcc
-#       - binutils-dev
-
-# after_success: |
-#   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-#   tar xzf master.tar.gz &&
-#   cd kcov-master &&
-#   mkdir build &&
-#   cd build &&
-#   cmake .. &&
-#   make &&
-#   sudo make install &&
-#   cd ../.. &&
-#   rm -rf kcov-master &&
-#   for file in target/${TARGET}/debug/made_up-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-#   bash <(curl -s https://codecov.io/bash) &&
-#   echo "Uploaded code coverage"
+after_success: |
+  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+  tar xzf master.tar.gz &&
+  cd kcov-master &&
+  mkdir build &&
+  cd build &&
+  cmake .. &&
+  make &&
+  sudo make install &&
+  cd ../.. &&
+  rm -rf kcov-master &&
+  for file in target/debug/made_up-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+  bash <(curl -s https://codecov.io/bash) &&
+  echo "Uploaded code coverage"
