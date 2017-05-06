@@ -72,6 +72,6 @@ mod tests {
                                                 vec![MarkdownFile::from(&Path::new("second-page.md")),
                                                             MarkdownFile::from(&Path::new("all_test.md"))],
         ), &config).unwrap();
-        test_utils::compare_string_content(expected.to_string(), actual);
+        test_utils::compare_string_content(expected, &actual);
     }
 }

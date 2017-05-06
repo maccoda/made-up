@@ -1,2 +1,3 @@
 stylesheet: "style.css"
 gen_index: true
+out_dir: "../made_up_out"

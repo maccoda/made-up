@@ -55,7 +55,7 @@ install:
   - source ~/.cargo/env || true
 
 script:
-  - sudo -E bash ci/script.sh
+  - bash ci/script.sh
 
 after_script: set +e
 
