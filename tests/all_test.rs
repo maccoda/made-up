@@ -7,6 +7,7 @@ use std::env;
 
 mod common;
 
+#[cfg(not(feature = "ci"))]
 #[test]
 fn test_it() {
     const OUT_DIR: &str = "target/made_up_out/";
