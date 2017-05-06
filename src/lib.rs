@@ -124,7 +124,6 @@ fn create_html<P: AsRef<Path>>(file_name: P,
 }
 
 
-// TODO Add some testing on this
 /// Finds the configuration file and deserializes it.
 fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvError> {
     const CONFIG_NAME: &'static str = "mdup.yml";
@@ -159,7 +158,6 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
 
 #[cfg(test)]
 mod tests {
-    // TODO Nowhere near enough tests here
     use test_utils;
     #[test]
     fn test_create_html() {
@@ -168,5 +166,19 @@ mod tests {
         let expected = include_str!("../tests/resources/all_test_good.html");
         let actual = super::create_html("resources/all_test.md", &config).unwrap();
         test_utils::compare_string_content(expected, &actual);
+    }
+
+    // Ensure that will return an error when no configuration found
+    #[test]
+    fn test_fail_read_config() {
+        assert!(super::read_config("src").is_err());
+    }
+
+    // Ensure that return error when no index found but specified it should not generate one
+    #[test]
+    fn test_fail_handle_config() {
+        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
+            .unwrap();
+        assert!(super::handle_config(&"resouces", &config).is_err());
     }
 }

@@ -41,7 +41,6 @@ impl Default for Configuration {
 impl Configuration {
     /// Obtain a `Configuration` from the path provided.
     pub fn from<P: AsRef<Path>>(path: P) -> Result<Configuration, serde_yaml::Error> {
-        // TODO Add error handling
         debug!("Reading configuration file");
         let raw_config = RawConfiguration::from(path)?;
         let def_config = Configuration::default();
