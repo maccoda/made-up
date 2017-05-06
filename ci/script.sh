@@ -10,8 +10,8 @@ main() {
         return
     fi
 
-    sudo cross test --target $TARGET
-    sudo cross test --target $TARGET --release
+    sudo 'cross test --target $TARGET'
+    sudo 'cross test --target $TARGET --release'
 }
 
 # we don't run the "test phase" when doing deploys
