@@ -3,12 +3,13 @@ extern crate made_up;
 use std::fs::{self, File};
 use std::io::{Read};
 use std::path::Path;
+use std::env;
 
 mod common;
 
 #[test]
 fn test_it() {
-    const OUT_DIR: &str = "../made_up_out/";
+    const OUT_DIR: &str = "target/made_up_out/";
     made_up::generate_site("resources").unwrap();
     common::check_file_exists(OUT_DIR.to_string() + "index.html");
     common::check_file_exists(OUT_DIR.to_string() + "all_test.html");
