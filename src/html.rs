@@ -8,6 +8,7 @@ struct Consumer<'a, I> {
 }
 
 impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
+    /// Consume the pull parser to produce the HTML string output
     fn consume(&mut self) -> String {
         while let Some(event) = self.iter.next() {
             debug!("{:?}", event);
@@ -20,9 +21,11 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
                 Event::Text(text) => {
                     if let Some(tag) = self.current.clone() {
                         match tag {
+                            // Add the ID
                             Tag::Header(_) => {
                                 let to_add =
-                                    format!("{}\"> {}", name_to_id(&text.to_string()), text);
+                                    format!(" id=\"{}\"> {}", name_to_id(&text.to_string()), text);
+                                self.buffer.pop();
                                 self.buffer.push_str(&to_add)
                             }
                             Tag::Image(_, _) => self.buffer.push_str(&format!(" alt=\"{}\"", text)),
@@ -41,9 +44,11 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
     }
 }
 
+/// Mapping of opening Markdown tag to HTML tag
 fn print_start_elem(tag: &Tag) -> String {
     let result = match tag {
-        &Tag::Header(int) => format!("<h{} id=\"", int),
+        // &Tag::Header(int) => format!("<h{} id=\"", int),
+        &Tag::Header(int) => format!("<h{}>", int),
         &Tag::Strong => "<b>".to_string(),
         &Tag::Emphasis => "<em>".to_string(),
         &Tag::Item => "<li>".to_string(),
@@ -58,6 +63,7 @@ fn print_start_elem(tag: &Tag) -> String {
         &Tag::TableHead => "<thead>".to_string(),
         &Tag::TableCell => "<td>".to_string(),
         &Tag::TableRow => "<tr>".to_string(),
+        &Tag::Rule => "<hr>".to_string(),
         tag => {
             warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
@@ -68,6 +74,7 @@ fn print_start_elem(tag: &Tag) -> String {
     result
 }
 
+/// Mapping of closing Markdown tag to HTML tag
 fn print_end_elem(tag: &Tag) -> String {
     let result = match tag {
         &Tag::Header(int) => format!("</h{}>\n", int),
@@ -85,6 +92,7 @@ fn print_end_elem(tag: &Tag) -> String {
         &Tag::TableHead => "</thead>\n".to_string(),
         &Tag::TableCell => "</td>\n".to_string(),
         &Tag::TableRow => "</tr>\n".to_string(),
+        &Tag::Rule => "</hr>".to_string(),
         tag => {
             warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
@@ -95,6 +103,9 @@ fn print_end_elem(tag: &Tag) -> String {
     result
 }
 
+/// Convert the given string to defined standard for ID
+/// * All lower case
+/// * Spaces replaces with hyphens
 fn name_to_id(name: &str) -> String {
     name.to_lowercase().replace(" ", "-")
 }
