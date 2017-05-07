@@ -22,9 +22,8 @@ pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String
 
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     data.insert("stylesheet".to_string(), Value::String(config.stylesheet()));
-    // NOTE Get the title perhaps from the configuration
     data.insert("title".to_string(),
-                Value::String("Index Generated Title".to_string()));
+                Value::String(config.title() + " - Home"));
     data.insert("element".to_string(),
                 Value::Array(files
                                  .get_files()
@@ -48,7 +47,7 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
 
     let mut data: BTreeMap<String, String> = BTreeMap::new();
     data.insert("stylesheet".to_string(), config.stylesheet());
-    data.insert("title".to_string(), "Generated Title".to_string());
+    data.insert("title".to_string(), config.title());
     data.insert("md_content".to_string(), content);
 
     let output = handlebars.render(TEMPLATE_NAME, &data)?;

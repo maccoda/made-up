@@ -25,7 +25,7 @@ fn main() {
     if let Err(error) = made_up::generate_site(dir) {
         match error {
             ConvError::Config(e) => println!("Configuration Error: {:?}", e),
-            ConvError::Fail(e) => println!("{}", e),
+            ConvError::Fail(e) => println!("Error: {}", e),
             ConvError::IO(e) => println!("IO Error: {:?}", e),
             ConvError::Template(e) => println!("Template Generation Error: {:?}", e),
         }

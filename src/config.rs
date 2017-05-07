@@ -10,6 +10,8 @@ struct RawConfiguration {
     stylesheet: Option<String>,
     gen_index: Option<bool>,
     out_dir: Option<String>,
+    copy_resources: Option<bool>,
+    title: Option<String>,
 }
 
 impl RawConfiguration {
@@ -26,6 +28,8 @@ pub struct Configuration {
     stylesheet: String,
     gen_index: bool,
     out_dir: String,
+    copy_resources: bool,
+    title: String,
 }
 
 impl Default for Configuration {
@@ -34,6 +38,8 @@ impl Default for Configuration {
             stylesheet: String::new(),
             gen_index: false,
             out_dir: "out".to_string(),
+            copy_resources: true,
+            title: "Title".to_string(),
         }
     }
 }
@@ -47,10 +53,16 @@ impl Configuration {
         let stylesheet = raw_config.stylesheet.unwrap_or(def_config.stylesheet);
         let gen_index = raw_config.gen_index.unwrap_or(def_config.gen_index);
         let out_dir = raw_config.out_dir.unwrap_or(def_config.out_dir);
+        let copy_resources = raw_config
+            .copy_resources
+            .unwrap_or(def_config.copy_resources);
+        let title = raw_config.title.unwrap_or(def_config.title);
         let config = Configuration {
             stylesheet,
             gen_index,
             out_dir,
+            copy_resources,
+            title,
         };
         debug!("{:?}", config);
         Ok(config)
@@ -67,6 +79,14 @@ impl Configuration {
     pub fn out_dir(&self) -> String {
         self.out_dir.clone()
     }
+    /// Returns the copy_resources value of the configuration
+    pub fn copy_resources(&self) -> bool {
+        self.copy_resources
+    }
+    /// Returns the title value of the configuration
+    pub fn title(&self) -> String {
+        self.title.clone()
+    }
 }
 
 #[cfg(test)]
@@ -78,6 +98,8 @@ mod tests {
         assert_eq!(actual.stylesheet, Some("test_style.css".to_string()));
         assert_eq!(actual.gen_index, None);
         assert_eq!(actual.out_dir, None);
+        assert_eq!(actual.copy_resources, None);
+        assert_eq!(actual.title, Some("My Site".to_string()));
     }
 
     #[test]
@@ -86,6 +108,8 @@ mod tests {
         assert_eq!(actual.stylesheet, Some("style.css".to_string()));
         assert_eq!(actual.gen_index, Some(false));
         assert_eq!(actual.out_dir, Some("output".to_string()));
+        assert_eq!(actual.copy_resources, Some(true));
+        assert_eq!(actual.title, Some("My Site".to_string()));
     }
 
     #[test]
@@ -94,6 +118,8 @@ mod tests {
         assert_eq!(actual.stylesheet, "test_style.css".to_string());
         assert_eq!(actual.gen_index, false);
         assert_eq!(actual.out_dir, "out".to_string());
+        assert_eq!(actual.copy_resources, true);
+        assert_eq!(actual.title, "My Site".to_string());
     }
 
     #[test]
@@ -102,5 +128,7 @@ mod tests {
         assert_eq!(actual.stylesheet, "style.css".to_string());
         assert_eq!(actual.gen_index, false);
         assert_eq!(actual.out_dir, "output".to_string());
+        assert_eq!(actual.copy_resources, true);
+        assert_eq!(actual.title, "My Site".to_string());
     }
 }

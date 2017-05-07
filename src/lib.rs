@@ -10,7 +10,7 @@ extern crate serde_derive;
 
 use std::fs::{self, File};
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 
 
@@ -64,11 +64,11 @@ impl From<serde_yaml::Error> for ConvError {
 /// * Read the configuration to determine how the output should be produced
 /// * Copy across required resources (stylesheet, referenced images, etc.)
 pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
-    info!("Generating site from directory: {}",
-          root_dir.as_ref().display());
+    let root_dir: PathBuf = fs::canonicalize(&root_dir).unwrap();
+    info!("Generating site from directory: {}", root_dir.display());
     let all_files = find_all_files(&root_dir)?;
     let configuration = read_config(&root_dir)?;
-    handle_config(&root_dir.as_ref(), &configuration)?;
+    handle_config(&root_dir, &configuration)?;
     let out_dir = configuration.out_dir();
     if configuration.gen_index() {
         debug!("Index to be generated");
@@ -83,18 +83,20 @@ pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
     }
 
     // Copy across the stylesheet
-    file_utils::copy_file(&root_dir, &out_dir, &configuration.stylesheet())?;
+    if configuration.copy_resources() {
+        file_utils::copy_file(&root_dir, &out_dir, &configuration.stylesheet())?;
 
-    // Copy across the images
-    let images_source = root_dir.as_ref().join("images");
-    let images_dest = format!("{}/images", out_dir);
-    fs::create_dir_all(&images_dest)?;
-    for entry in fs::read_dir(format!("{}/images", root_dir.as_ref().to_str().unwrap()))? {
-        let entry = entry?;
-        info!("Copying {:?}", entry.file_name());
-        file_utils::copy_file(&images_source,
-                              &images_dest,
-                              &entry.file_name().into_string().unwrap())?;
+        // Copy across the images
+        let images_source = root_dir.join("images");
+        let images_dest = format!("{}/images", out_dir);
+        fs::create_dir_all(&images_dest)?;
+        for entry in fs::read_dir(format!("{}/images", root_dir.to_str().unwrap()))? {
+            let entry = entry?;
+            info!("Copying {:?}", entry.file_name());
+            file_utils::copy_file(&images_source,
+                                  &images_dest,
+                                  &entry.file_name().into_string().unwrap())?;
+        }
     }
     Ok(())
 }
@@ -148,17 +150,22 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
 fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<(), ConvError> {
     // If not specified don't generate, if true generate
     if !config.gen_index() {
-        info!("Looking for {:?}", root_dir.as_ref().join("index.md"));
-        file_utils::check_file_exists(root_dir.as_ref().join("index.md"));
-        return Err(ConvError::Fail("Expected index.md in the root directory".into()));
+        let path = root_dir.as_ref().join("index.md");
+        info!("Looking for {:?}", path);
+        return if file_utils::check_file_exists(path) {
+                   Ok(())
+               } else {
+                   Err(ConvError::Fail("Expected index.md in the root directory".into()))
+               };
     }
-    // Check for presence of output directory
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use test_utils;
+    use std::env;
+    use std::fs::File;
     #[test]
     fn test_create_html() {
         // Read expected
@@ -180,5 +187,17 @@ mod tests {
         let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
             .unwrap();
         assert!(super::handle_config(&"resouces", &config).is_err());
+    }
+
+    // Ensure that return positive result when the index is not to be generated and one exists
+    #[test]
+    fn test_pass_handle_config() {
+        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
+            .unwrap();
+        let mut tmp_dir = env::temp_dir();
+        tmp_dir.push("index.md");
+
+        File::create(tmp_dir).unwrap();
+        assert!(super::handle_config(&env::temp_dir(), &config).is_ok());
     }
 }

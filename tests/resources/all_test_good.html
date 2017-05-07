@@ -2,63 +2,67 @@
 
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
 
-    <title>Generated Title</title>
+    <title>Title</title>
 </head>
 
 <body>
     <nav><a href="index.html">Home</a></nav>
-    <h1 id="the-heading"> The heading</h1>
-    <h2 id="some-stuff"> Some stuff</h2>
-    <ul>
-        <li>Point one</li>
-        <li>Point two
+    <div id="main_content_wrap" class="outer">
+        <div id="main_content" class="inner">
+            <h1 id="the-heading"> The heading</h1>
+            <h2 id="some-stuff"> Some stuff</h2>
             <ul>
-                <li>Indent point one</li>
+                <li>Point one</li>
+                <li>Point two
+                    <ul>
+                        <li>Indent point one</li>
+                    </ul>
+                </li>
+                <li>Point three</li>
             </ul>
-        </li>
-        <li>Point three</li>
-    </ul>
-    <h2 id="here-is-an-image"> Here is an image</h2>
-    <p><img src="images/rustacean-orig-noshadow.png" alt="ferris" />
-    </p>
-    <h2 id="now-for-some-code"> Now for some code</h2>
-    <h3 id="inline"> Inline</h3>
-    <p>We first want to show the <code>main</code> function with <code>"Hello World"</code>
-    </p>
-    <h3 id="block"> Block</h3>
-    <pre><code class="language-rust">fn main() {
-    println!("Hello World");
-}
-</code></pre>
-    <h2 id="links"> Links</h2>
-    <h3 id="links-to-external-pages"> Links to external pages</h3>
-    <p>This is the author <a href="https://github.com/maccoda">maccoda</a>
-    </p>
-    <h3 id="internal-links-on-page"> Internal links on page</h3>
-    <p>Lets go <a href="#here-is-an-image">back</a> to the pictures</p>
-    <h2 id="fonts"> Fonts</h2>
-    <p>We can have <b>bold</b> text, <em>italic</em> text
-    </p>
-    <!-- Tables are not recognized by CommonMark it appears -->
-    <h2 id="tables"> Tables</h2>
-    <table>
-        <thead>
-            <td> Column 1 </td>
-            <td> Column 2 </td>
-        </thead>
-        <tr>
-            <td>data </td>
-            <td> more data </td>
-        </tr>
-        <tr>
-            <td> even more </td>
-            <td> something </td>
-        </tr>
-    </table>
-    <h2 id="a-second-page"> A second page</h2>
-    <p>Want to be able to link to <a href="second-page.html">another page</a> so that is is similar toa static site.</p>
+            <h2 id="here-is-an-image"> Here is an image</h2>
+            <p><img src="images/rustacean-orig-noshadow.png" alt="ferris" />
+            </p>
+            <h2 id="now-for-some-code"> Now for some code</h2>
+            <h3 id="inline"> Inline</h3>
+            <p>We first want to show the <code>main</code> function with <code>"Hello World"</code>
+            </p>
+            <h3 id="block"> Block</h3>
+            <pre><code class="language-rust">fn main() {
+                println!("Hello World");
+            }
+            </code></pre>
+            <h2 id="links"> Links</h2>
+            <h3 id="links-to-external-pages"> Links to external pages</h3>
+            <p>This is the author <a href="https://github.com/maccoda">maccoda</a>
+            </p>
+            <h3 id="internal-links-on-page"> Internal links on page</h3>
+            <p>Lets go <a href="#here-is-an-image">back</a> to the pictures</p>
+            <h2 id="fonts"> Fonts</h2>
+            <p>We can have <b>bold</b> text, <em>italic</em> text
+            </p>
+            <!-- Tables are not recognized by CommonMark it appears -->
+            <h2 id="tables"> Tables</h2>
+            <table>
+                <thead>
+                    <td> Column 1 </td>
+                    <td> Column 2 </td>
+                </thead>
+                <tr>
+                    <td>data </td>
+                    <td> more data </td>
+                </tr>
+                <tr>
+                    <td> even more </td>
+                    <td> something </td>
+                </tr>
+            </table>
+            <h2 id="a-second-page"> A second page</h2>
+            <p>Want to be able to link to <a href="second-page.html">another page</a> so that is is similar toa static site.</p>
+        </div>
+    </div>
 
 </body>
 

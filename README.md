@@ -33,6 +33,8 @@ specified the default will be used.
 |`stylesheet` | String | Relative path to the style sheet to use for the site|  |
 |`gen_index` | Boolean | Choose if index page is to be generated. | *False* |
 | `out_dir`| String | Path to the output directory. | *./out*|
+| `copy_resources` | Boolean | Specify if the stylesheet and images are to be copied or just referenced. | *True* |
+| `title` | String | Title to be in the `<head>` of the generated site. | *Title* |
 
 ### Ignored Files
 Not every file can make the cut for the site, so to make it easy to determine
@@ -50,20 +52,7 @@ To make things simple there is a simple convention for where to store your image
 
 ## TODO
 
-### Functional
-- [X] ~~Perform the basic conversion of markdown to HTML~~
-- [ ] Traverse directories to:
-  - [ ] Create page hierarchy
-  - [X] ~~Discover all markdown to be used~~
-- [ ] Auto-generate the index page as just a listing of all top level pages
-(Partially complete, it generates for all files not just top level)
-- [X] ~~Shall provide a configuration where:~~
-  - [X] ~~Can excluded certain files from being part of the site~~
-  - [X] ~~Can specify user defined index instead of generated~~
-  - [X] ~~Allow for a stylesheet to be specified~~
-- [X] ~~Internal linking to sections within same page~~
-- [X] ~~Linking to other pages (Need to specify how to do this, end in *.html)~~
-- [X] ~~Copy images~~
+Please see issues for functionality still to come. If there is some that you think is needed raise an issue with the `enhancement` label.
 
 ### Technical
 - [X] ~~Get a logger in here please, no more println~~
