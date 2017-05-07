@@ -14,7 +14,7 @@ fn test_it() {
     println!("Writing to {:?}", tmp_dir);
     let mut config_content = common::read_from_file(CONFIG_FILE);
     let old_config_content = config_content.clone();
-    config_content.push_str(&format!("out_dir: {}\n", tmp_dir.display()));
+    config_content.push_str(&format!("out_dir: \"{}\"\n", tmp_dir.display()));
 
     println!("Writing config: {:?}", config_content);
     common::write_to_file(CONFIG_FILE, config_content);
