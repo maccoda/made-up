@@ -33,6 +33,7 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
                     }
                 }
                 Event::Html(content) => self.buffer.push_str(&content.to_string()),
+                Event::SoftBreak => self.buffer.push_str(" "),
                 elem => warn!("Unhandled type: {:?}", elem),
             }
         }
