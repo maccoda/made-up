@@ -13,24 +13,33 @@ fn main() {
                     })
             .unwrap();
     let matches = App::new("Made-Up Static Site Generator")
-          .version(crate_version!())
-          .author(crate_authors!())
-          .arg(Arg::with_name("root_dir")
-                .help("Root directory of Markdown files")
-                .index(1)
-                .required(false))
-          .get_matches();
+        .version(crate_version!())
+        .author(crate_authors!())
+        .arg(Arg::with_name("root_dir")
+                 .help("Root directory of Markdown files")
+                 .index(1)
+                 .required(false))
+        .get_matches();
 
     let dir = matches.value_of("root_dir").unwrap_or(".");
-    if let Err(error) = made_up::generate_site(dir) {
-        match error {
+    let convertor: made_up::Convertor = handle_error(made_up::Convertor::new(dir));
+    let files = handle_error(convertor.generate_site());
+    handle_error(convertor.write_files(files));
+
+}
+use std::fmt::Debug;
+fn handle_error<T: Debug>(possible_error: Result<T, ConvError>) -> T {
+    if possible_error.is_err() {
+        match possible_error.unwrap_err() {
             ConvError::Config(e) => println!("Configuration Error: {:?}", e),
             ConvError::Fail(e) => println!("Error: {}", e),
             ConvError::IO(e) => println!("IO Error: {:?}", e),
             ConvError::Template(e) => println!("Template Generation Error: {:?}", e),
-        }
+        };
+        std::process::exit(1);
+    } else {
+        possible_error.unwrap()
     }
-
 }
 
 use log::{LogLevel, LogRecord, LogMetadata};

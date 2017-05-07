@@ -6,12 +6,12 @@ use handlebars::Handlebars;
 use serde_json::Value;
 
 
-use FileList;
+use MarkdownFileList;
 use config::Configuration;
 use ConvError;
 
 /// Construct a generated index page for the site from the list of files used.
-pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String, ConvError> {
+pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Result<String, ConvError> {
     const TEMPLATE_NAME: &'static str = "index";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -64,7 +64,7 @@ mod tests {
         use config;
         let config = config::Configuration::from("resources/mdup.yml").unwrap();
         let expected = include_str!("../tests/resources/index_good.html");
-        let actual = super::generate_index(&super::FileList::new(
+        let actual = super::generate_index(&super::MarkdownFileList::new(
                                         vec![MarkdownFile::from(&Path::new("second-page.md")),
                                              MarkdownFile::from(&Path::new("all_test.md"))],
         ), &config).unwrap();

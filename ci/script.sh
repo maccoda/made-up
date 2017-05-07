@@ -10,8 +10,8 @@ main() {
         return
     fi
 
-    cross test --target $TARGET --features "ci"
-    cross test --target $TARGET --release --features "ci"
+    cross test --target $TARGET
+    cross test --target $TARGET
 }
 
 # we don't run the "test phase" when doing deploys

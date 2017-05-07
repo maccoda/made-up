@@ -18,7 +18,3 @@ clap = "2.24"
 [dependencies.handlebars]
 version = "0.24.1"
 features = ["serde_type"]
-
-
-[features]
-ci = []

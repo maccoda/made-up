@@ -23,7 +23,7 @@ mod templates;
 #[cfg(test)]
 mod test_utils;
 
-use walker::FileList;
+use walker::MarkdownFileList;
 
 /// Error type for the conversion of the markdown files to the static site.
 #[derive(Debug)]
@@ -52,64 +52,112 @@ impl From<serde_yaml::Error> for ConvError {
     }
 }
 
-// TODO Have less functionality in this top level package.
+#[derive(Debug)]
+pub struct Convertor {
+    configuration: config::Configuration,
+    root_dir: PathBuf,
+}
 
-/// Entry function which will perform the entire process for the static site
-/// generation.
-///
-/// Through here it will:
-///
-/// * Find all markdown files to use
-/// * Convert all to HTML
-/// * Read the configuration to determine how the output should be produced
-/// * Copy across required resources (stylesheet, referenced images, etc.)
-pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
-    let root_dir: PathBuf = fs::canonicalize(&root_dir).unwrap();
-    info!("Generating site from directory: {}", root_dir.display());
-    let all_files = find_all_files(&root_dir)?;
-    let configuration = read_config(&root_dir)?;
-    handle_config(&root_dir, &configuration)?;
-    let out_dir = configuration.out_dir();
-    if configuration.gen_index() {
-        debug!("Index to be generated");
-        let index_content = templates::generate_index(&all_files, &configuration).unwrap();
-        file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
-    }
-    for file in all_files.get_files() {
-        let result = create_html(file.get_path(), &configuration).unwrap();
-        file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()),
-                                      result,
-                                      out_dir.to_owned())?;
+#[derive(Debug)]
+pub struct ConvertedFile {
+    path: PathBuf,
+    content: String,
+}
+
+impl Convertor {
+    /// Initialize a new convertor for the provided root directory
+    pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor, ConvError> {
+        let root_dir: PathBuf = fs::canonicalize(&root_dir).unwrap();
+        info!("Generating site from directory: {}", root_dir.display());
+        let configuration = read_config(&root_dir)?;
+        handle_config(&root_dir, &configuration)?;
+        Ok(Convertor {
+               configuration,
+               root_dir,
+           })
     }
 
-    // Copy across the stylesheet
-    if configuration.copy_resources() {
-        file_utils::copy_file(&root_dir, &out_dir, &configuration.stylesheet())?;
+    /// Entry function which will perform the entire process for the static site
+    /// generation.
+    ///
+    /// Through here it will:
+    ///
+    /// * Find all markdown files to use
+    /// * Convert all to HTML
+    /// * Read the configuration to determine how the output should be produced
+    /// * Copy across required resources (stylesheet, referenced images, etc.)
+    pub fn generate_site(&self) -> Result<Vec<ConvertedFile>, ConvError> {
+        info!("Generating site");
+        let mut converted_files = vec![];
 
-        // Copy across the images
-        let images_source = root_dir.join("images");
-        let images_dest = format!("{}/images", out_dir);
-        fs::create_dir_all(&images_dest)?;
-        for entry in fs::read_dir(format!("{}/images", root_dir.to_str().unwrap()))? {
-            let entry = entry?;
-            info!("Copying {:?}", entry.file_name());
-            file_utils::copy_file(&images_source,
-                                  &images_dest,
-                                  &entry.file_name().into_string().unwrap())?;
+        let all_files = find_all_files(&self.root_dir)?;
+
+        let out_dir = self.configuration.out_dir();
+        if self.configuration.gen_index() {
+            debug!("Index to be generated");
+            let index_content = templates::generate_index(&all_files, &self.configuration).unwrap();
+            converted_files.push(ConvertedFile {
+                                     path: PathBuf::from(&out_dir).join("index.html"),
+                                     content: index_content,
+                                 })
+            // file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
         }
+        for file in all_files.get_files() {
+            let result = create_html(file.get_path(), &self.configuration).unwrap();
+            converted_files.push(ConvertedFile {
+                                 path:
+                                     PathBuf::from(&out_dir).join(format!("{}.html",
+                                                                          file.get_file_name())),
+                                 content: result,
+                             })
+            // file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()),
+            //   result,
+            //   out_dir.to_owned())?;
+        }
+
+        Ok(converted_files)
     }
-    Ok(())
+
+    /// Write the files provided to the file system
+    ///
+    /// The files provided will already be produced using `generate_site` and hence have all configuration information present
+    pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<(), ConvError> {
+        info!("Writing output");
+        fs::create_dir(self.configuration.out_dir())?;
+        for file in files {
+            file_utils::write_to_file(file.path, file.content);
+        }
+        // Copy across the stylesheet
+        if self.configuration.copy_resources() {
+            file_utils::copy_file(&self.root_dir,
+                                  &self.configuration.out_dir(),
+                                  &self.configuration.stylesheet())?;
+
+            // Copy across the images
+            let images_source = self.root_dir.join("images");
+            let images_dest = format!("{}/images", self.configuration.out_dir());
+            fs::create_dir_all(&images_dest)?;
+            for entry in fs::read_dir(format!("{}/images", self.root_dir.to_str().unwrap()))? {
+                let entry = entry?;
+                info!("Copying {:?}", entry.file_name());
+                file_utils::copy_file(&images_source,
+                                      &images_dest,
+                                      &entry.file_name().into_string().unwrap())?;
+            }
+        }
+        Ok(())
+    }
 }
 
 
 
 /// Starting at the root directory provided, find all Markdown files within in.
-fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<FileList, ConvError> {
+fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList, ConvError> {
     let files = walker::find_markdown_files(root_dir)?;
     for file in &files {
         debug!("{:?}", file);
     }
-    Ok(FileList::new(files))
+    Ok(MarkdownFileList::new(files))
 }
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct

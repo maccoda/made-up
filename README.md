@@ -58,4 +58,4 @@ Please see issues for functionality still to come. If there is some that you thi
 - [X] ~~Get a logger in here please, no more println~~
 - [ ] Ensure properly handle errors
 - [ ] More testing!!! Let's try get 95% coverage!
-- [ ] Tidy up code structure (particularly lib.rs)
+- [X] Tidy up code structure (particularly lib.rs)
