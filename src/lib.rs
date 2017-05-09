@@ -123,7 +123,9 @@ impl Convertor {
     /// The files provided will already be produced using `generate_site` and hence have all configuration information present
     pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<(), ConvError> {
         info!("Writing output");
-        fs::create_dir(self.configuration.out_dir())?;
+        if !file_utils::check_dir_exists(self.configuration.out_dir()) {
+            fs::create_dir(self.configuration.out_dir())?;
+        }
         for file in files {
             file_utils::write_to_file(file.path, file.content);
         }

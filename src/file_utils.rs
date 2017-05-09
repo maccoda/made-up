@@ -22,6 +22,11 @@ pub fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {
     fs::metadata(path).map(|x| !x.is_dir()).unwrap_or(false)
 }
 
+/// Checks if a directory exists. Will return false if it exists or it exists but is a file.
+pub fn check_dir_exists<P: AsRef<Path>>(path: P) -> bool {
+    fs::metadata(path).map(|x| x.is_dir()).unwrap_or(false)
+}
+
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
 pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
                                                  dest_dir: &Q,
@@ -61,5 +66,10 @@ mod tests {
     fn test_check_file() {
         // Will check I exist
         assert!(super::check_file_exists("src/file_utils.rs"));
+    }
+
+    #[test]
+    fn test_check_dir_exists() {
+        assert!(super::check_dir_exists("src"));
     }
 }
