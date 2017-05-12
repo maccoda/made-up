@@ -58,3 +58,20 @@ pub fn compare_string_content(expected: &str, actual: &str) {
 
     assert_eq!(expected, actual);
 }
+
+
+use log::{LogLevel, LogRecord, LogMetadata};
+
+pub struct SimpleLogger;
+
+impl ::log::Log for SimpleLogger {
+    fn enabled(&self, metadata: &LogMetadata) -> bool {
+        metadata.level() <= LogLevel::Debug
+    }
+
+    fn log(&self, record: &LogRecord) {
+        if self.enabled(record.metadata()) {
+            println!("{} - {}", record.level(), record.args());
+        }
+    }
+}

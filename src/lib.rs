@@ -67,7 +67,7 @@ pub struct ConvertedFile {
 impl Convertor {
     /// Initialize a new convertor for the provided root directory
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor, ConvError> {
-        let root_dir: PathBuf = fs::canonicalize(&root_dir).unwrap();
+        let root_dir: PathBuf = root_dir.as_ref().to_path_buf();
         info!("Generating site from directory: {}", root_dir.display());
         let configuration = read_config(&root_dir)?;
         handle_config(&root_dir, &configuration)?;
