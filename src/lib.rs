@@ -53,10 +53,12 @@ pub struct ConvertedFile {
 }
 
 impl Convertor {
-    /// Initialize a new convertor for the provided root directory
+    /// Initialize a new convertor for the provided root directory.
+    /// This will read and validate the configuration.
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor> {
         let root_dir: PathBuf = root_dir.as_ref().to_path_buf();
-        info!("Generating site from directory: {}", root_dir.display());
+        info!("Generating site from directory: {}",
+              root_dir.canonicalize()?.display());
         let configuration = read_config(&root_dir)?;
         handle_config(&root_dir, &configuration)?;
         Ok(Convertor {
@@ -72,8 +74,6 @@ impl Convertor {
     ///
     /// * Find all markdown files to use
     /// * Convert all to HTML
-    /// * Read the configuration to determine how the output should be produced
-    /// * Copy across required resources (stylesheet, referenced images, etc.)
     pub fn generate_site(&self) -> Result<Vec<ConvertedFile>> {
         info!("Generating site");
         let mut converted_files = vec![];
@@ -88,7 +88,6 @@ impl Convertor {
                                      path: PathBuf::from(&out_dir).join("index.html"),
                                      content: index_content,
                                  })
-            // file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
         }
         for file in all_files.get_files() {
             let result = create_html(file.get_path(), &self.configuration).unwrap();
@@ -98,9 +97,6 @@ impl Convertor {
                                                                           file.get_file_name())),
                                  content: result,
                              })
-            // file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()),
-            //   result,
-            //   out_dir.to_owned())?;
         }
 
         Ok(converted_files)
@@ -110,15 +106,14 @@ impl Convertor {
     ///
     /// The files provided will already be produced using `generate_site` and hence have all configuration information present
     pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<()> {
-        info!("Writing output");
         if !file_utils::check_dir_exists(self.configuration.out_dir()) {
             fs::create_dir(self.configuration.out_dir())?;
         }
         for file in files {
             file_utils::write_to_file(file.path, file.content);
         }
-        // Copy across the stylesheet
         if self.configuration.copy_resources() {
+            // Copy across the stylesheet
             file_utils::copy_file(&self.root_dir,
                                   &self.configuration.out_dir(),
                                   &self.configuration.stylesheet())?;
@@ -188,7 +183,8 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
     // If not specified don't generate, if true generate
     if !config.gen_index() {
         let path = root_dir.as_ref().join("index.md");
-        info!("Looking for {:?}", path);
+        info!("Checking that {:?} exists like the configuration says it will",
+              path);
         return if file_utils::check_file_exists(path) {
                    Ok(())
                } else {

@@ -4,7 +4,8 @@ use serde_yaml;
 use super::file_utils;
 
 
-/// Constructs a configuration struct with accessors to each field.
+/// Constructs a configuration struct with accessors to each field and default fields.
+/// The macro will implement the `Default` trait for the values provided.
 macro_rules! configuration {
     (
         $(
@@ -70,13 +71,27 @@ macro_rules! configuration {
             }
     };
 }
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+    use serde_yaml;
 
-fn test_config_macro() {
+    use super::file_utils;
+
     configuration!{
         stylesheet, String, "".to_string();
         gen_index, bool, false;
         out_dir, String, "out".to_string();
         copy_resources, bool, true;
         title, String, "title".to_string()
+    }
+    #[test]
+    fn test_config_macro_default() {
+        let config_def = Configuration::default();
+        assert_eq!(config_def.stylesheet(), "".to_string());
+        assert_eq!(config_def.gen_index(), false);
+        assert_eq!(config_def.out_dir(), "out".to_string());
+        assert_eq!(config_def.copy_resources(), true);
+        assert_eq!(config_def.title(), "title".to_string());
     }
 }

@@ -84,7 +84,7 @@ pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFi
         let path = entry.path();
         if is_accepted_markdown_file(path) {
             info!("Adding file {:?}", path);
-            info!("Parent: {:?}", path.parent());
+            // info!("Parent: {:?}", path.parent());
             files.push(MarkdownFile::from(path));
         }
     }
