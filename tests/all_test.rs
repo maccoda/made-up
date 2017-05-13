@@ -1,28 +1,30 @@
 extern crate made_up;
-// extern crate tempdir;
+extern crate log;
 use std::fs;
 use std::env;
-use std::path::PathBuf;
 
 mod common;
+use common::SimpleLogger;
 
 #[test]
 fn test_it() {
+    log::set_logger(|max_log_level| {
+                        max_log_level.set(::log::LogLevelFilter::Debug);
+                        Box::new(SimpleLogger)
+                    })
+            .unwrap();
     const CONFIG_FILE: &str = "resources/mdup.yml";
     // Need to use temporary directories for this
     // Ammend the configuration
     let tmp_dir = env::temp_dir();
     let tmp_dir = tmp_dir.join("made_up_out");
     println!("Temp dir: {:?}", tmp_dir.to_string_lossy());
-    // let tmp_dir = tempdir::TempDir::new("made_up_out").expect("Failed to create temp dir");
     let mut config_content = common::read_from_file(CONFIG_FILE);
     let old_config_content = config_content.clone();
     config_content.push_str(&format!("out_dir: {:?}\n", tmp_dir.to_string_lossy()));
 
     println!("Writing config: {}", config_content);
-    // HACK Until work out why windows is failing
-    // common::write_to_file(CONFIG_FILE, config_content);
-    let tmp_dir = PathBuf::from("out");
+    common::write_to_file(CONFIG_FILE, config_content);
 
 
     // Let's start the testing
@@ -57,5 +59,5 @@ fn test_it() {
     assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() +
                                       "/images/rustacean-orig-noshadow.png"));
     fs::remove_dir_all(tmp_dir).expect("Unable to delete tmp dir");
-    // common::write_to_file(CONFIG_FILE, old_config_content);
+    common::write_to_file(CONFIG_FILE, old_config_content);
 }

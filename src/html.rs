@@ -11,7 +11,6 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
     /// Consume the pull parser to produce the HTML string output
     fn consume(&mut self) -> String {
         while let Some(event) = self.iter.next() {
-            debug!("{:?}", event);
             match event {
                 Event::Start(tag) => {
                     self.buffer.push_str(&print_start_elem(&tag));
@@ -70,7 +69,6 @@ fn print_start_elem(tag: &Tag) -> String {
         }
     };
 
-    debug!("{:?}", result);
     result
 }
 
@@ -99,7 +97,6 @@ fn print_end_elem(tag: &Tag) -> String {
         }
     };
 
-    debug!("{:?}", result);
     result
 }
 
