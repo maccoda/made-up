@@ -22,21 +22,15 @@ pub fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {
     fs::metadata(path).map(|x| !x.is_dir()).unwrap_or(false)
 }
 
-/// Use to write to a file that is in a separate directory. This will ensure
-/// that directory is created and create if required before writing to the file.
-pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P,
-                                         content_to_write: String,
-                                         dir: P)
-                                         -> io::Result<()> {
-    fs::create_dir_all(&dir)?;
-    write_to_file(dir.as_ref().join(file_name), content_to_write);
-    Ok(())
+/// Checks if a directory exists. Will return false if it exists or it exists but is a file.
+pub fn check_dir_exists<P: AsRef<Path>>(path: P) -> bool {
+    fs::metadata(path).map(|x| x.is_dir()).unwrap_or(false)
 }
 
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
 pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
                                                  dest_dir: &Q,
-                                                 file_name: &String)
+                                                 file_name: &str)
                                                  -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
@@ -45,25 +39,27 @@ pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
     Ok(())
 }
 
-#[cfg(not(feature = "ci"))]
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::env;
 
     const CONTENT: &'static str = "This is a test";
     const FILE_NAME: &'static str = "test_out.txt";
     // I do admit there is huge dependencies here but meh.
     #[test]
     fn test_write_and_read_file() {
-        super::write_to_file(FILE_NAME, String::from(CONTENT));
+        let mut tmp_dir = env::temp_dir();
+        tmp_dir.push(FILE_NAME);
+        super::write_to_file(&tmp_dir, String::from(CONTENT));
         // Check it exists
-        assert!(fs::metadata(FILE_NAME).is_ok());
+        assert!(fs::metadata(&tmp_dir).is_ok());
         // Check is not a directory
-        assert!(!fs::metadata(FILE_NAME).unwrap().is_dir());
+        assert!(!fs::metadata(&tmp_dir).unwrap().is_dir());
 
-        assert_eq!(CONTENT, super::read_from_file(FILE_NAME));
+        assert_eq!(CONTENT, super::read_from_file(&tmp_dir));
 
-        fs::remove_file(FILE_NAME).unwrap();
+        fs::remove_file(&tmp_dir).unwrap();
     }
 
     #[test]
@@ -73,23 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dir_exists_write() {
-        const DIR: &str = "src";
-        super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
-        assert_eq!(CONTENT,
-                   super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
-
-        fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
-    }
-
-    #[test]
-    fn test_dir_write() {
-        const DIR: &str = "awoogaa";
-        super::write_file_in_dir(FILE_NAME, CONTENT.to_string(), DIR).unwrap();
-        assert_eq!(CONTENT,
-                   super::read_from_file(DIR.to_owned() + "/" + FILE_NAME));
-
-        fs::remove_file(DIR.to_owned() + "/" + FILE_NAME).unwrap();
-        fs::remove_dir(DIR).unwrap();
+    fn test_check_dir_exists() {
+        assert!(super::check_dir_exists("src"));
     }
 }

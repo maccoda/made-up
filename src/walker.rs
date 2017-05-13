@@ -6,16 +6,16 @@ use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
 /// Wrapper of a list of Markdown files. With end goal to be able to convey the
 /// hierarchy.
-pub struct FileList {
+pub struct MarkdownFileList {
     // Considering maintaining directory structure by Map<Vec<>>
     files: Vec<MarkdownFile>,
 }
 
-impl FileList {
-    pub fn new(files: Vec<MarkdownFile>) -> FileList {
+impl MarkdownFileList {
+    pub fn new(files: Vec<MarkdownFile>) -> MarkdownFileList {
         let mut sorted_files = files;
         sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
-        FileList { files: sorted_files }
+        MarkdownFileList { files: sorted_files }
     }
     /// Get all Markdown files
     pub fn get_files(&self) -> &Vec<MarkdownFile> {
@@ -66,7 +66,7 @@ fn is_excluded(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| s.starts_with("_"))
+        .map(|s| s.starts_with('_'))
         .unwrap_or(false)
 }
 

@@ -7,10 +7,12 @@ extern crate log;
 extern crate serde_yaml;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate error_chain;
 
 use std::fs::{self, File};
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 
 
@@ -23,98 +25,134 @@ mod templates;
 #[cfg(test)]
 mod test_utils;
 
-use walker::FileList;
+use walker::MarkdownFileList;
 
 /// Error type for the conversion of the markdown files to the static site.
+error_chain!{
+    foreign_links {
+        IO(std::io::Error);
+        Template(handlebars::RenderError);
+        Config(serde_yaml::Error);
+    }
+
+    errors {
+        Fail(t: String)
+    }
+}
+
 #[derive(Debug)]
-pub enum ConvError {
-    Fail(String),
-    IO(std::io::Error),
-    Template(handlebars::RenderError),
-    Config(serde_yaml::Error),
+pub struct Convertor {
+    configuration: config::Configuration,
+    root_dir: PathBuf,
 }
 
-impl From<std::io::Error> for ConvError {
-    fn from(error: std::io::Error) -> ConvError {
-        ConvError::IO(error)
-    }
+#[derive(Debug)]
+pub struct ConvertedFile {
+    path: PathBuf,
+    content: String,
 }
 
-impl From<handlebars::RenderError> for ConvError {
-    fn from(error: handlebars::RenderError) -> ConvError {
-        ConvError::Template(error)
-    }
-}
-
-impl From<serde_yaml::Error> for ConvError {
-    fn from(error: serde_yaml::Error) -> ConvError {
-        ConvError::Config(error)
-    }
-}
-
-// TODO Have less functionality in this top level package.
-
-/// Entry function which will perform the entire process for the static site
-/// generation.
-///
-/// Through here it will:
-///
-/// * Find all markdown files to use
-/// * Convert all to HTML
-/// * Read the configuration to determine how the output should be produced
-/// * Copy across required resources (stylesheet, referenced images, etc.)
-pub fn generate_site<P: AsRef<Path>>(root_dir: P) -> Result<(), ConvError> {
-    info!("Generating site from directory: {}",
-          root_dir.as_ref().display());
-    let all_files = find_all_files(&root_dir)?;
-    let configuration = read_config(&root_dir)?;
-    handle_config(&root_dir.as_ref(), &configuration)?;
-    let out_dir = configuration.out_dir();
-    if configuration.gen_index() {
-        debug!("Index to be generated");
-        let index_content = templates::generate_index(&all_files, &configuration).unwrap();
-        file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
-    }
-    for file in all_files.get_files() {
-        let result = create_html(file.get_path(), &configuration).unwrap();
-        file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()),
-                                      result,
-                                      out_dir.to_owned())?;
+impl Convertor {
+    /// Initialize a new convertor for the provided root directory
+    pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor> {
+        let root_dir: PathBuf = root_dir.as_ref().to_path_buf();
+        info!("Generating site from directory: {}", root_dir.display());
+        let configuration = read_config(&root_dir)?;
+        handle_config(&root_dir, &configuration)?;
+        Ok(Convertor {
+               configuration,
+               root_dir,
+           })
     }
 
-    // Copy across the stylesheet
-    file_utils::copy_file(&root_dir, &out_dir, &configuration.stylesheet())?;
+    /// Entry function which will perform the entire process for the static site
+    /// generation.
+    ///
+    /// Through here it will:
+    ///
+    /// * Find all markdown files to use
+    /// * Convert all to HTML
+    /// * Read the configuration to determine how the output should be produced
+    /// * Copy across required resources (stylesheet, referenced images, etc.)
+    pub fn generate_site(&self) -> Result<Vec<ConvertedFile>> {
+        info!("Generating site");
+        let mut converted_files = vec![];
 
-    // Copy across the images
-    let images_source = root_dir.as_ref().join("images");
-    let images_dest = format!("{}/images", out_dir);
-    fs::create_dir_all(&images_dest)?;
-    for entry in fs::read_dir(format!("{}/images", root_dir.as_ref().to_str().unwrap()))? {
-        let entry = entry?;
-        info!("Copying {:?}", entry.file_name());
-        file_utils::copy_file(&images_source,
-                              &images_dest,
-                              &entry.file_name().into_string().unwrap())?;
+        let all_files = find_all_files(&self.root_dir)?;
+
+        let out_dir = self.configuration.out_dir();
+        if self.configuration.gen_index() {
+            debug!("Index to be generated");
+            let index_content = templates::generate_index(&all_files, &self.configuration).unwrap();
+            converted_files.push(ConvertedFile {
+                                     path: PathBuf::from(&out_dir).join("index.html"),
+                                     content: index_content,
+                                 })
+            // file_utils::write_file_in_dir("index.html", index_content, &out_dir)?;
+        }
+        for file in all_files.get_files() {
+            let result = create_html(file.get_path(), &self.configuration).unwrap();
+            converted_files.push(ConvertedFile {
+                                 path:
+                                     PathBuf::from(&out_dir).join(format!("{}.html",
+                                                                          file.get_file_name())),
+                                 content: result,
+                             })
+            // file_utils::write_file_in_dir(format!("{}.html", file.get_file_name()),
+            //   result,
+            //   out_dir.to_owned())?;
+        }
+
+        Ok(converted_files)
     }
-    Ok(())
+
+    /// Write the files provided to the file system
+    ///
+    /// The files provided will already be produced using `generate_site` and hence have all configuration information present
+    pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<()> {
+        info!("Writing output");
+        if !file_utils::check_dir_exists(self.configuration.out_dir()) {
+            fs::create_dir(self.configuration.out_dir())?;
+        }
+        for file in files {
+            file_utils::write_to_file(file.path, file.content);
+        }
+        // Copy across the stylesheet
+        if self.configuration.copy_resources() {
+            file_utils::copy_file(&self.root_dir,
+                                  &self.configuration.out_dir(),
+                                  &self.configuration.stylesheet())?;
+
+            // Copy across the images
+            let images_source = self.root_dir.join("images");
+            let images_dest = format!("{}/images", self.configuration.out_dir());
+            fs::create_dir_all(&images_dest)?;
+            for entry in fs::read_dir(format!("{}/images", self.root_dir.to_str().unwrap()))? {
+                let entry = entry?;
+                info!("Copying {:?}", entry.file_name());
+                file_utils::copy_file(&images_source,
+                                      &images_dest,
+                                      &entry.file_name().into_string().unwrap())?;
+            }
+        }
+        Ok(())
+    }
 }
 
 
 
 /// Starting at the root directory provided, find all Markdown files within in.
-fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<FileList, ConvError> {
+fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
     let files = walker::find_markdown_files(root_dir)?;
     for file in &files {
         debug!("{:?}", file);
     }
-    Ok(FileList::new(files))
+    Ok(MarkdownFileList::new(files))
 }
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
-fn create_html<P: AsRef<Path>>(file_name: P,
-                               config: &config::Configuration)
-                               -> Result<String, ConvError> {
+fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> Result<String> {
     let mut content = String::new();
     File::open(file_name)
         .and_then(|mut x| x.read_to_string(&mut content))?;
@@ -125,7 +163,7 @@ fn create_html<P: AsRef<Path>>(file_name: P,
 
 
 /// Finds the configuration file and deserializes it.
-fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvError> {
+fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
     const CONFIG_NAME: &'static str = "mdup.yml";
     let full_path = path.as_ref().to_path_buf();
     debug!("Starting search for configuration file at: {:?}",
@@ -138,27 +176,33 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
             }
         }
     }
-    Err(ConvError::Fail(format!("Configuration file: {} not found in {}",
+    Err(ErrorKind::Fail(format!("Configuration file: {} not found in {}",
                                 CONFIG_NAME,
-                                fs::canonicalize(path).unwrap().display())))
+                                fs::canonicalize(path).unwrap().display()))
+                .into())
 }
 
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
-fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<(), ConvError> {
+fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
     // If not specified don't generate, if true generate
     if !config.gen_index() {
-        info!("Looking for {:?}", root_dir.as_ref().join("index.md"));
-        file_utils::check_file_exists(root_dir.as_ref().join("index.md"));
-        return Err(ConvError::Fail("Expected index.md in the root directory".into()));
+        let path = root_dir.as_ref().join("index.md");
+        info!("Looking for {:?}", path);
+        return if file_utils::check_file_exists(path) {
+                   Ok(())
+               } else {
+                   Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into())
+               };
     }
-    // Check for presence of output directory
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use test_utils;
+    use std::env;
+    use std::fs::File;
     #[test]
     fn test_create_html() {
         // Read expected
@@ -180,5 +224,17 @@ mod tests {
         let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
             .unwrap();
         assert!(super::handle_config(&"resouces", &config).is_err());
+    }
+
+    // Ensure that return positive result when the index is not to be generated and one exists
+    #[test]
+    fn test_pass_handle_config() {
+        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
+            .unwrap();
+        let mut tmp_dir = env::temp_dir();
+        tmp_dir.push("index.md");
+
+        File::create(tmp_dir).unwrap();
+        assert!(super::handle_config(&env::temp_dir(), &config).is_ok());
     }
 }

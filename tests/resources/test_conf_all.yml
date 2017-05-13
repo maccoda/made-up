@@ -1,3 +1,5 @@
 stylesheet: "style.css"
 gen_index: false
 out_dir: "output"
+copy_resources: true
+title: "My Site"

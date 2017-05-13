@@ -2,18 +2,22 @@
 
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="{{stylesheet}}">
+    <link rel="stylesheet" type="text/css" href="{{stylesheet}}">
 
     <title>{{title}}</title>
 </head>
 
 <body>
-    <h1>Table of Contents</h1>
-    <ul>
-        {{#each element as |elem|}}
-        <li><a href="{{elem}}.html">{{elem}}</a></li>
-        {{/each}}
-    </ul>
+    <div id="main_content_wrap" class="outer">
+        <div id="main_content" class="inner">
+            <h1>Table of Contents</h1>
+            <ul>
+                {{#each element as |elem|}}
+                <li><a href="{{elem}}.html">{{elem}}</a></li>
+                {{/each}}
+            </ul>
+        </div>
+    </div>
 </body>
 
 </html>

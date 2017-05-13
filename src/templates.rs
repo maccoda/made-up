@@ -6,12 +6,12 @@ use handlebars::Handlebars;
 use serde_json::Value;
 
 
-use FileList;
+use MarkdownFileList;
 use config::Configuration;
-use ConvError;
+use Result;
 
 /// Construct a generated index page for the site from the list of files used.
-pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String, ConvError> {
+pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Result<String> {
     const TEMPLATE_NAME: &'static str = "index";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -22,9 +22,8 @@ pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String
 
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     data.insert("stylesheet".to_string(), Value::String(config.stylesheet()));
-    // NOTE Get the title perhaps from the configuration
     data.insert("title".to_string(),
-                Value::String("Index Generated Title".to_string()));
+                Value::String(config.title() + " - Home"));
     data.insert("element".to_string(),
                 Value::Array(files
                                  .get_files()
@@ -37,7 +36,7 @@ pub fn generate_index(files: &FileList, config: &Configuration) -> Result<String
 }
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
-pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String, ConvError> {
+pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String> {
     const TEMPLATE_NAME: &'static str = "basic";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -48,7 +47,7 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
 
     let mut data: BTreeMap<String, String> = BTreeMap::new();
     data.insert("stylesheet".to_string(), config.stylesheet());
-    data.insert("title".to_string(), "Generated Title".to_string());
+    data.insert("title".to_string(), config.title());
     data.insert("md_content".to_string(), content);
 
     let output = handlebars.render(TEMPLATE_NAME, &data)?;
@@ -65,7 +64,7 @@ mod tests {
         use config;
         let config = config::Configuration::from("resources/mdup.yml").unwrap();
         let expected = include_str!("../tests/resources/index_good.html");
-        let actual = super::generate_index(&super::FileList::new(
+        let actual = super::generate_index(&super::MarkdownFileList::new(
                                         vec![MarkdownFile::from(&Path::new("second-page.md")),
                                              MarkdownFile::from(&Path::new("all_test.md"))],
         ), &config).unwrap();

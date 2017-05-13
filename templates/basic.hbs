@@ -2,14 +2,22 @@
 
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="{{stylesheet}}">
+    <link rel="stylesheet" type="text/css" href="{{stylesheet}}">
 
     <title>{{title}}</title>
 </head>
 
 <body>
-    <nav><a href="index.html">Home</a></nav>
-    {{{md_content}}}
+    <div id="header_wrap" class="inner">
+        <a href="index.html">Home</a>
+    </div>
+    <div id="main_content_wrap" class="outer">
+        <div id="main_content" class="inner">
+            {{{md_content}}}
+
+        </div>
+
+    </div>
 </body>
 
 </html>
