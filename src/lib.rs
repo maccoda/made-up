@@ -7,6 +7,8 @@ extern crate log;
 extern crate serde_yaml;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate error_chain;
 
 use std::fs::{self, File};
 use std::io::Read;
@@ -26,29 +28,15 @@ mod test_utils;
 use walker::MarkdownFileList;
 
 /// Error type for the conversion of the markdown files to the static site.
-#[derive(Debug)]
-pub enum ConvError {
-    Fail(String),
-    IO(std::io::Error),
-    Template(handlebars::RenderError),
-    Config(serde_yaml::Error),
-}
-
-impl From<std::io::Error> for ConvError {
-    fn from(error: std::io::Error) -> ConvError {
-        ConvError::IO(error)
+error_chain!{
+    foreign_links {
+        IO(std::io::Error);
+        Template(handlebars::RenderError);
+        Config(serde_yaml::Error);
     }
-}
 
-impl From<handlebars::RenderError> for ConvError {
-    fn from(error: handlebars::RenderError) -> ConvError {
-        ConvError::Template(error)
-    }
-}
-
-impl From<serde_yaml::Error> for ConvError {
-    fn from(error: serde_yaml::Error) -> ConvError {
-        ConvError::Config(error)
+    errors {
+        Fail(t: String)
     }
 }
 
@@ -66,7 +54,7 @@ pub struct ConvertedFile {
 
 impl Convertor {
     /// Initialize a new convertor for the provided root directory
-    pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor, ConvError> {
+    pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor> {
         let root_dir: PathBuf = root_dir.as_ref().to_path_buf();
         info!("Generating site from directory: {}", root_dir.display());
         let configuration = read_config(&root_dir)?;
@@ -86,7 +74,7 @@ impl Convertor {
     /// * Convert all to HTML
     /// * Read the configuration to determine how the output should be produced
     /// * Copy across required resources (stylesheet, referenced images, etc.)
-    pub fn generate_site(&self) -> Result<Vec<ConvertedFile>, ConvError> {
+    pub fn generate_site(&self) -> Result<Vec<ConvertedFile>> {
         info!("Generating site");
         let mut converted_files = vec![];
 
@@ -121,7 +109,7 @@ impl Convertor {
     /// Write the files provided to the file system
     ///
     /// The files provided will already be produced using `generate_site` and hence have all configuration information present
-    pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<(), ConvError> {
+    pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<()> {
         info!("Writing output");
         if !file_utils::check_dir_exists(self.configuration.out_dir()) {
             fs::create_dir(self.configuration.out_dir())?;
@@ -154,7 +142,7 @@ impl Convertor {
 
 
 /// Starting at the root directory provided, find all Markdown files within in.
-fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList, ConvError> {
+fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
     let files = walker::find_markdown_files(root_dir)?;
     for file in &files {
         debug!("{:?}", file);
@@ -164,9 +152,7 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList, ConvE
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
-fn create_html<P: AsRef<Path>>(file_name: P,
-                               config: &config::Configuration)
-                               -> Result<String, ConvError> {
+fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> Result<String> {
     let mut content = String::new();
     File::open(file_name)
         .and_then(|mut x| x.read_to_string(&mut content))?;
@@ -177,7 +163,7 @@ fn create_html<P: AsRef<Path>>(file_name: P,
 
 
 /// Finds the configuration file and deserializes it.
-fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvError> {
+fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
     const CONFIG_NAME: &'static str = "mdup.yml";
     let full_path = path.as_ref().to_path_buf();
     debug!("Starting search for configuration file at: {:?}",
@@ -190,14 +176,15 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration, ConvErr
             }
         }
     }
-    Err(ConvError::Fail(format!("Configuration file: {} not found in {}",
+    Err(ErrorKind::Fail(format!("Configuration file: {} not found in {}",
                                 CONFIG_NAME,
-                                fs::canonicalize(path).unwrap().display())))
+                                fs::canonicalize(path).unwrap().display()))
+                .into())
 }
 
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
-fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<(), ConvError> {
+fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
     // If not specified don't generate, if true generate
     if !config.gen_index() {
         let path = root_dir.as_ref().join("index.md");
@@ -205,7 +192,7 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
         return if file_utils::check_file_exists(path) {
                    Ok(())
                } else {
-                   Err(ConvError::Fail("Expected index.md in the root directory".into()))
+                   Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into())
                };
     }
     Ok(())

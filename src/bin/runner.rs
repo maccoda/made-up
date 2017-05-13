@@ -4,7 +4,7 @@ extern crate log;
 extern crate clap;
 
 use clap::{App, Arg};
-use made_up::ConvError;
+use made_up::{Error, ErrorKind};
 
 fn main() {
     log::set_logger(|max_log_level| {
@@ -28,13 +28,16 @@ fn main() {
 
 }
 use std::fmt::Debug;
-fn handle_error<T: Debug>(possible_error: Result<T, ConvError>) -> T {
+fn handle_error<T: Debug>(possible_error: Result<T, Error>) -> T {
     if possible_error.is_err() {
         match possible_error.unwrap_err() {
-            ConvError::Config(e) => println!("Configuration Error: {:?}", e),
-            ConvError::Fail(e) => println!("Error: {}", e),
-            ConvError::IO(e) => println!("IO Error: {:?}", e),
-            ConvError::Template(e) => println!("Template Generation Error: {:?}", e),
+            made_up::Error(ErrorKind::Config(e), _) => println!("Configuration Error: {:?}", e),
+            made_up::Error(ErrorKind::Fail(e), _) => println!("Error: {}", e),
+            made_up::Error(ErrorKind::IO(e), _) => println!("IO Error: {:?}", e),
+            made_up::Error(ErrorKind::Template(e), _) => {
+                println!("Template Generation Error: {:?}", e)
+            }
+            made_up::Error(ErrorKind::Msg(msg), _) => println!("{}", msg),
         };
         std::process::exit(1);
     } else {

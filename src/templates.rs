@@ -8,10 +8,10 @@ use serde_json::Value;
 
 use MarkdownFileList;
 use config::Configuration;
-use ConvError;
+use Result;
 
 /// Construct a generated index page for the site from the list of files used.
-pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Result<String, ConvError> {
+pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Result<String> {
     const TEMPLATE_NAME: &'static str = "index";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
@@ -36,7 +36,7 @@ pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Resul
 }
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
-pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String, ConvError> {
+pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String> {
     const TEMPLATE_NAME: &'static str = "basic";
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
