@@ -16,8 +16,7 @@ pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Resul
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
     handlebars
-        .register_template_file(TEMPLATE_NAME,
-                                &Path::new(&format!("templates/{}.hbs", TEMPLATE_NAME)))
+        .register_template_string(TEMPLATE_NAME, include_str!("../templates/index.hbs"))
         .unwrap();
 
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
@@ -41,8 +40,7 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
     // Build the page from the template just to make it easier for future us
     let mut handlebars = Handlebars::new();
     handlebars
-        .register_template_file(TEMPLATE_NAME,
-                                &Path::new(&format!("templates/{}.hbs", TEMPLATE_NAME)))
+        .register_template_string(TEMPLATE_NAME, include_str!("../templates/basic.hbs"))
         .unwrap();
 
     let mut data: BTreeMap<String, String> = BTreeMap::new();
