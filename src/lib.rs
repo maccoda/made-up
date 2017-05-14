@@ -113,10 +113,10 @@ impl Convertor {
             file_utils::write_to_file(file.path, file.content);
         }
         if self.configuration.copy_resources() {
-            // Copy across the stylesheet
-            file_utils::copy_file(&self.root_dir,
-                                  &self.configuration.out_dir(),
-                                  &self.configuration.stylesheet())?;
+            for stylesheet in &self.configuration.stylesheet() {
+                // Copy across the stylesheet
+                file_utils::copy_file(&self.root_dir, &self.configuration.out_dir(), stylesheet)?;
+            }
 
             // Copy across the images
             let images_source = self.root_dir.join("images");

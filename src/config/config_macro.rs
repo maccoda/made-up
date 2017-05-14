@@ -1,9 +1,3 @@
-use std::path::Path;
-use serde_yaml;
-
-use super::file_utils;
-
-
 /// Constructs a configuration struct with accessors to each field and default fields.
 /// The macro will implement the `Default` trait for the values provided.
 macro_rules! configuration {
@@ -76,7 +70,7 @@ mod tests {
     use std::path::Path;
     use serde_yaml;
 
-    use super::file_utils;
+    use file_utils;
 
     configuration!{
         stylesheet, String, "".to_string();

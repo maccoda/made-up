@@ -40,6 +40,7 @@ fn test_it() {
     assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/all_test.html"));
     assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/second-page.html"));
     assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/style.css"));
+    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/second_style.css"));
 
     println!("Checking all_test content");
     let expected = include_str!("../tests/resources/all_test_good.html");

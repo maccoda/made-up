@@ -45,7 +45,7 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
 
 /// Mapping of opening Markdown tag to HTML tag
 fn print_start_elem(tag: &Tag) -> String {
-    let result = match tag {
+    match tag {
         // &Tag::Header(int) => format!("<h{} id=\"", int),
         &Tag::Header(int) => format!("<h{}>", int),
         &Tag::Strong => "<b>".to_string(),
@@ -67,14 +67,13 @@ fn print_start_elem(tag: &Tag) -> String {
             warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
         }
-    };
+    }
 
-    result
 }
 
 /// Mapping of closing Markdown tag to HTML tag
 fn print_end_elem(tag: &Tag) -> String {
-    let result = match tag {
+    match tag {
         &Tag::Header(int) => format!("</h{}>\n", int),
         &Tag::Strong => "</b>\n".to_string(),
         &Tag::Emphasis => "</em>\n".to_string(),
@@ -95,9 +94,8 @@ fn print_end_elem(tag: &Tag) -> String {
             warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
         }
-    };
+    }
 
-    result
 }
 
 /// Convert the given string to defined standard for ID

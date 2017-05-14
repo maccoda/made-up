@@ -2,7 +2,9 @@
 
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="{{stylesheet}}">
+    {{#each stylesheet as |style|}}
+    <link rel="stylesheet" type="text/css" href="{{style}}">
+    {{/each}}
 
     <title>{{title}}</title>
 </head>

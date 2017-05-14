@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::path::Path;
 
 use handlebars::Handlebars;
 // NOTE Looks like this needs to be here
@@ -20,7 +19,12 @@ pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Resul
         .unwrap();
 
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
-    data.insert("stylesheet".to_string(), Value::String(config.stylesheet()));
+    data.insert("stylesheet".to_string(),
+                Value::Array(config
+                                 .stylesheet()
+                                 .iter()
+                                 .map(|x| Value::String(x.to_owned()))
+                                 .collect()));
     data.insert("title".to_string(),
                 Value::String(config.title() + " - Home"));
     data.insert("element".to_string(),
@@ -43,10 +47,15 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
         .register_template_string(TEMPLATE_NAME, include_str!("../templates/basic.hbs"))
         .unwrap();
 
-    let mut data: BTreeMap<String, String> = BTreeMap::new();
-    data.insert("stylesheet".to_string(), config.stylesheet());
-    data.insert("title".to_string(), config.title());
-    data.insert("md_content".to_string(), content);
+    let mut data: BTreeMap<String, Value> = BTreeMap::new();
+    data.insert("stylesheet".to_string(),
+                Value::Array(config
+                                 .stylesheet()
+                                 .iter()
+                                 .map(|x| Value::String(x.to_owned()))
+                                 .collect()));
+    data.insert("title".to_string(), Value::String(config.title()));
+    data.insert("md_content".to_string(), Value::String(content));
 
     let output = handlebars.render(TEMPLATE_NAME, &data)?;
     Ok(output)

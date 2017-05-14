@@ -7,7 +7,7 @@ mod config_macro;
 
 // Mirror of `RawConfiguration` but has resolved all `Option`s to their default values.
 configuration!{
-    stylesheet, String, String::new();
+    stylesheet, Vec<String>, vec![];
     gen_index, bool, false;
     out_dir, String, "out".to_string();
     copy_resources, bool, true;
@@ -20,7 +20,7 @@ mod tests {
     #[test]
     fn test_raw_read() {
         let actual = RawConfiguration::from("tests/resources/test_conf.yml").unwrap();
-        assert_eq!(actual.stylesheet, Some("test_style.css".to_string()));
+        assert_eq!(actual.stylesheet, Some(vec!["test_style.css".to_string()]));
         assert_eq!(actual.gen_index, None);
         assert_eq!(actual.out_dir, None);
         assert_eq!(actual.copy_resources, None);
@@ -30,7 +30,10 @@ mod tests {
     #[test]
     fn test_raw_read_all() {
         let actual = RawConfiguration::from("tests/resources/test_conf_all.yml").unwrap();
-        assert_eq!(actual.stylesheet, Some("style.css".to_string()));
+        assert_eq!(actual.stylesheet,
+                   Some(vec!["style.css".to_string(),
+                             "another.css".to_string(),
+                             "and_another.css".to_string()]));
         assert_eq!(actual.gen_index, Some(false));
         assert_eq!(actual.out_dir, Some("output".to_string()));
         assert_eq!(actual.copy_resources, Some(true));
@@ -40,7 +43,7 @@ mod tests {
     #[test]
     fn test_read() {
         let actual = Configuration::from("tests/resources/test_conf.yml").unwrap();
-        assert_eq!(actual.stylesheet, "test_style.css".to_string());
+        assert_eq!(actual.stylesheet, vec!["test_style.css".to_string()]);
         assert_eq!(actual.gen_index, false);
         assert_eq!(actual.out_dir, "out".to_string());
         assert_eq!(actual.copy_resources, true);
@@ -50,7 +53,10 @@ mod tests {
     #[test]
     fn test_read_all() {
         let actual = Configuration::from("tests/resources/test_conf_all.yml").unwrap();
-        assert_eq!(actual.stylesheet, "style.css".to_string());
+        assert_eq!(actual.stylesheet,
+                   vec!["style.css".to_string(),
+                        "another.css".to_string(),
+                        "and_another.css".to_string()]);
         assert_eq!(actual.gen_index, false);
         assert_eq!(actual.out_dir, "output".to_string());
         assert_eq!(actual.copy_resources, true);

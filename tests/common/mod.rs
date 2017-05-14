@@ -6,7 +6,7 @@
 // Perhaps make it part of the build step to keep them in sync
 #![allow(dead_code)]
 use std::fs::{self, File};
-use std::io::{Read, Write, self};
+use std::io::{self, Read, Write};
 use std::path::Path;
 
 /// Writes the provided content to a file at the path provided.
@@ -31,14 +31,20 @@ pub fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {
 
 /// Use to write to a file that is in a separate directory. This will ensure
 /// that directory is created and create if required before writing to the file.
-pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P, content_to_write: String, dir: P) -> io::Result<()>{
+pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P,
+                                         content_to_write: String,
+                                         dir: P)
+                                         -> io::Result<()> {
     fs::create_dir_all(&dir)?;
     write_to_file(dir.as_ref().join(file_name), content_to_write);
     Ok(())
 }
 
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
-pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P, dest_dir: &Q, file_name: &String) -> Result<(), io::Error> {
+pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
+                                                 dest_dir: &Q,
+                                                 file_name: &str)
+                                                 -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
     let _ = fs::copy(source, dest)?;
@@ -53,8 +59,8 @@ fn strip_all_whitespace(string: &str) -> String {
 
 /// Asserts the two strings provided have the same non-whitespace content.
 pub fn compare_string_content(expected: &str, actual: &str) {
-    let expected = strip_all_whitespace(&expected);
-    let actual = strip_all_whitespace(&actual);
+    let expected = strip_all_whitespace(expected);
+    let actual = strip_all_whitespace(actual);
 
     assert_eq!(expected, actual);
 }

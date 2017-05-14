@@ -1,4 +1,7 @@
-stylesheet: "style.css"
+stylesheet:
+  - "style.css"
+  - "another.css"
+  - "and_another.css"
 gen_index: false
 out_dir: "output"
 copy_resources: true

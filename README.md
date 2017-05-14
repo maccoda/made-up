@@ -30,7 +30,7 @@ specified the default will be used.
 
 | Field | Type | Description | Default |
 |---|---| --- | --- |
-|`stylesheet` | String | Relative path to the style sheet to use for the site|  |
+|`stylesheet` | Array<String> | List of paths for the stylesheets used for the site. | *[]* |
 |`gen_index` | Boolean | Choose if index page is to be generated. | *False* |
 | `out_dir`| String | Path to the output directory. | *./out*|
 | `copy_resources` | Boolean | Specify if the stylesheet and images are to be copied or just referenced. | *True* |

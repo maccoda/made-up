@@ -1,2 +1,3 @@
-stylesheet: "test_style.css"
+stylesheet:
+  - "test_style.css"
 title: "My Site"
