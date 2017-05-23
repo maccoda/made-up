@@ -42,3 +42,8 @@ We can have **bold** text, *italic* text
 ## A second page
 Want to be able to link to [another page](second-page.html) so that is is similar to
 a static site.
+
+## Block Quotes
+> Something you said
+
+So that I can respond to

@@ -92,11 +92,10 @@ impl Convertor {
         for file in all_files.get_files() {
             let result = create_html(file.get_path(), &self.configuration).unwrap();
             converted_files.push(ConvertedFile {
-                                 path:
-                                     PathBuf::from(&out_dir).join(format!("{}.html",
-                                                                          file.get_file_name())),
-                                 content: result,
-                             })
+                                     path: PathBuf::from(&out_dir)
+                                         .join(format!("{}.html", file.get_file_name())),
+                                     content: result,
+                                 })
         }
 
         Ok(converted_files)
@@ -180,25 +179,33 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
 fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
-    // If not specified don't generate, if true generate
+    // If not specified don't generate, if true better not have an index present
+    let path = root_dir.as_ref().join("index.md");
     if !config.gen_index() {
-        let path = root_dir.as_ref().join("index.md");
         info!("Checking that {:?} exists like the configuration says it will",
               path);
-        return if file_utils::check_file_exists(path) {
-                   Ok(())
-               } else {
-                   Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into())
-               };
+        if file_utils::check_file_exists(path) {
+            Ok(())
+        } else {
+            Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into())
+        }
+    } else {
+        info!("Checking that {:?} does not exist so can generate index",
+              path);
+        if file_utils::check_file_exists(path) {
+            Err(ErrorKind::Fail("Should not have index.md in the root directory".into()).into())
+        } else {
+            Ok(())
+
+        }
     }
-    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use test_utils;
     use std::env;
-    use std::fs::File;
+    use std::fs::{self, File};
     #[test]
     fn test_create_html() {
         // Read expected
@@ -216,10 +223,19 @@ mod tests {
 
     // Ensure that return error when no index found but specified it should not generate one
     #[test]
-    fn test_fail_handle_config() {
+    fn test_fail_handle_config_no_index() {
         let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
             .unwrap();
         assert!(super::handle_config(&"resouces", &config).is_err());
+    }
+
+    // Ensure that return error when index is found but configured to generate one
+    #[test]
+    fn test_fail_handle_config_with_index() {
+        let config = super::config::Configuration::from("resources/mdup.yml").unwrap();
+        let _ = fs::File::create("resources/index.md").unwrap();
+        assert!(super::handle_config(&"resources", &config).is_err());
+        fs::remove_file("resources/index.md").unwrap();
     }
 
     // Ensure that return positive result when the index is not to be generated and one exists

@@ -63,6 +63,7 @@ fn print_start_elem(tag: &Tag) -> String {
         &Tag::TableCell => "<td>".to_string(),
         &Tag::TableRow => "<tr>".to_string(),
         &Tag::Rule => "<hr>".to_string(),
+        &Tag::BlockQuote => "<blockquote>".to_string(),
         tag => {
             warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
@@ -90,6 +91,7 @@ fn print_end_elem(tag: &Tag) -> String {
         &Tag::TableCell => "</td>\n".to_string(),
         &Tag::TableRow => "</tr>\n".to_string(),
         &Tag::Rule => "</hr>".to_string(),
+        &Tag::BlockQuote => "</blockquote>".to_string(),
         tag => {
             warn!("{:?} tag is unimplemented", tag);
             unimplemented!();
