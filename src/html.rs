@@ -36,6 +36,7 @@ impl<'a, I: Iterator<Item = Event<'a>>> Consumer<'a, I> {
                 }
                 Event::Html(content) => self.buffer.push_str(&content.to_string()),
                 Event::SoftBreak => self.buffer.push_str(" "),
+                Event::InlineHtml(content) => self.buffer.push_str(&content),
                 elem => warn!("Unhandled type: {:?}", elem),
             }
         }
@@ -123,6 +124,8 @@ mod tests {
     fn test_name_to_id() {
         let actual = super::name_to_id("A very lOng name or Heading");
         assert_eq!("a-very-long-name-or-heading", actual);
+        let actual = super::name_to_id("Something (with some brackets)");
+        assert_eq!("something-(with-some-brackets)", actual);
     }
 
     #[test]

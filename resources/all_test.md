@@ -47,3 +47,8 @@ a static site.
 > Something you said
 
 So that I can respond to
+
+## Inline HTML
+
+Writing <b>bold</b> in the HTML version
+
