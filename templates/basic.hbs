@@ -2,24 +2,41 @@
 
 <head>
     <meta charset="utf-8">
-    {{#each stylesheet as |style|}}
-    <link rel="stylesheet" type="text/css" href="{{style}}">
-    {{/each}}
 
     <title>{{title}}</title>
+
+    <!-- Bootstrap theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="highlight.css">
+    <link rel="stylesheet" href="tomorrow-night.css">
+
+    <link rel="stylesheet" href="made-up.css">
+    <!-- Apply user defined styles last -->
+    {{#each stylesheet as |style|}}
+    <link rel="stylesheet" type="text/css" href="{{style}}"> {{/each}}
 </head>
 
 <body>
-    <div id="header_wrap" class="inner">
-        <a href="index.html">Home</a>
-    </div>
-    <div id="main_content_wrap" class="outer">
-        <div id="main_content" class="inner">
-            {{{md_content}}}
+    <nav class="navbar navbar-default">
+        <div class="navbar-header">
+            <div class="container-fluid">
+                <ul class="nav navbar-nav">
+                    <a class="navbar-brand" href="index.html">Home</a>
 
+                </ul>
+            </div>
         </div>
-
+    </nav>
+    <div class="container-fluid">
+        {{{md_content}}}
     </div>
+
+    <script src="highlight.js"></script>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
 </body>
 
 </html>

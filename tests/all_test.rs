@@ -9,10 +9,9 @@ use common::SimpleLogger;
 #[test]
 fn test_it() {
     log::set_logger(|max_log_level| {
-                        max_log_level.set(::log::LogLevelFilter::Debug);
-                        Box::new(SimpleLogger)
-                    })
-            .unwrap();
+        max_log_level.set(::log::LogLevelFilter::Debug);
+        Box::new(SimpleLogger)
+    }).unwrap();
     const CONFIG_FILE: &str = "resources/mdup.yml";
     // Need to use temporary directories for this
     // Ammend the configuration
@@ -34,13 +33,25 @@ fn test_it() {
     convertor.write_files(files).expect("Failed write_files");
 
 
-    println!("Checking that files exist under {}",
-             tmp_dir.to_string_lossy().to_string());
-    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/index.html"));
-    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/all_test.html"));
-    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/second-page.html"));
-    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/style.css"));
-    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() + "/second_style.css"));
+    println!(
+        "Checking that files exist under {}",
+        tmp_dir.to_string_lossy().to_string()
+    );
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/index.html",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/all_test.html",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/second-page.html",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/style.css",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/second_style.css",
+    ));
 
     println!("Checking all_test content");
     let expected = include_str!("../tests/resources/all_test_good.html");
@@ -52,13 +63,30 @@ fn test_it() {
     common::compare_string_content(expected, &actual.to_string());
     println!("Checking second-page content");
     let expected = include_str!("../tests/resources/second-page_good.html");
-    let actual = common::read_from_file(tmp_dir.to_string_lossy().to_string() +
-                                        "/second-page.html");
+    let actual =
+        common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/second-page.html");
     common::compare_string_content(expected, &actual.to_string());
 
     // Ensure the images were move across successfully
-    assert!(common::check_file_exists(tmp_dir.to_string_lossy().to_string() +
-                                      "/images/rustacean-orig-noshadow.png"));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() +
+            "/images/rustacean-orig-noshadow.png",
+    ));
+
+    // Ensure the default styles were written
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/highlight.css",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/highlight.js",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() + "/made-up.css",
+    ));
+    assert!(common::check_file_exists(
+        tmp_dir.to_string_lossy().to_string() +
+            "/tomorrow-night.css",
+    ));
     fs::remove_dir_all(tmp_dir).expect("Unable to delete tmp dir");
     common::write_to_file(CONFIG_FILE, old_config_content);
 }

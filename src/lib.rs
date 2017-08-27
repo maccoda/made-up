@@ -57,14 +57,16 @@ impl Convertor {
     /// This will read and validate the configuration.
     pub fn new<P: AsRef<Path>>(root_dir: P) -> Result<Convertor> {
         let root_dir: PathBuf = root_dir.as_ref().to_path_buf();
-        info!("Generating site from directory: {}",
-              root_dir.canonicalize()?.display());
+        info!(
+            "Generating site from directory: {}",
+            root_dir.canonicalize()?.display()
+        );
         let configuration = read_config(&root_dir)?;
         handle_config(&root_dir, &configuration)?;
         Ok(Convertor {
-               configuration,
-               root_dir,
-           })
+            configuration,
+            root_dir,
+        })
     }
 
     /// Entry function which will perform the entire process for the static site
@@ -85,17 +87,16 @@ impl Convertor {
             debug!("Index to be generated");
             let index_content = templates::generate_index(&all_files, &self.configuration).unwrap();
             converted_files.push(ConvertedFile {
-                                     path: PathBuf::from(&out_dir).join("index.html"),
-                                     content: index_content,
-                                 })
+                path: PathBuf::from(&out_dir).join("index.html"),
+                content: index_content,
+            })
         }
         for file in all_files.get_files() {
             let result = create_html(file.get_path(), &self.configuration).unwrap();
             converted_files.push(ConvertedFile {
-                                     path: PathBuf::from(&out_dir)
-                                         .join(format!("{}.html", file.get_file_name())),
-                                     content: result,
-                                 })
+                path: PathBuf::from(&out_dir).join(format!("{}.html", file.get_file_name())),
+                content: result,
+            })
         }
 
         Ok(converted_files)
@@ -124,11 +125,40 @@ impl Convertor {
             for entry in fs::read_dir(format!("{}/images", self.root_dir.to_str().unwrap()))? {
                 let entry = entry?;
                 info!("Copying {:?}", entry.file_name());
-                file_utils::copy_file(&images_source,
-                                      &images_dest,
-                                      &entry.file_name().into_string().unwrap())?;
+                file_utils::copy_file(
+                    &images_source,
+                    &images_dest,
+                    &entry.file_name().into_string().unwrap(),
+                )?;
             }
         }
+
+        // Write across the default stylings. Need static string so can be
+        // within the binary.
+        let highlight_css = include_str!("../theme/highlight.css");
+        let highlight_js = include_str!("../theme/highlight.js");
+        let made_up_css = include_str!("../theme/made-up.css");
+        let tomorrow_night_css = include_str!("../theme/tomorrow-night.css");
+
+        file_utils::write_to_file(
+            self.configuration.out_dir() + "/highlight.css",
+            highlight_css.to_owned(),
+        );
+        file_utils::write_to_file(
+            self.configuration.out_dir() + "/highlight.js",
+            highlight_js.to_owned(),
+        );
+        file_utils::write_to_file(
+            self.configuration.out_dir() + "/made-up.css",
+            made_up_css.to_owned(),
+        );
+        file_utils::write_to_file(
+            self.configuration.out_dir() + "/tomorrow-night.css",
+            tomorrow_night_css.to_owned(),
+        );
+
+
+
         Ok(())
     }
 }
@@ -148,8 +178,9 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
 fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> Result<String> {
     let mut content = String::new();
-    File::open(file_name)
-        .and_then(|mut x| x.read_to_string(&mut content))?;
+    File::open(file_name).and_then(
+        |mut x| x.read_to_string(&mut content),
+    )?;
     let parser = pulldown_cmark::Parser::new_ext(&content, pulldown_cmark::OPTION_ENABLE_TABLES);
 
     templates::encapsulate_bare_html(html::consume(parser), config)
@@ -160,8 +191,10 @@ fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> 
 fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
     const CONFIG_NAME: &'static str = "mdup.yml";
     let full_path = path.as_ref().to_path_buf();
-    debug!("Starting search for configuration file at: {:?}",
-           path.as_ref());
+    debug!(
+        "Starting search for configuration file at: {:?}",
+        path.as_ref()
+    );
     let root_iter = fs::read_dir(&path)?.filter_map(|x| x.ok());
     for entry in root_iter {
         if let Ok(file_name) = entry.file_name().into_string() {
@@ -170,10 +203,13 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
             }
         }
     }
-    Err(ErrorKind::Fail(format!("Configuration file: {} not found in {}",
-                                CONFIG_NAME,
-                                fs::canonicalize(path).unwrap().display()))
-                .into())
+    Err(
+        ErrorKind::Fail(format!(
+            "Configuration file: {} not found in {}",
+            CONFIG_NAME,
+            fs::canonicalize(path).unwrap().display()
+        )).into(),
+    )
 }
 
 /// Processes the configuration and produces a configuration addressing if
@@ -182,18 +218,26 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
     // If not specified don't generate, if true better not have an index present
     let path = root_dir.as_ref().join("index.md");
     if !config.gen_index() {
-        info!("Checking that {:?} exists like the configuration says it will",
-              path);
+        info!(
+            "Checking that {:?} exists like the configuration says it will",
+            path
+        );
         if file_utils::check_file_exists(path) {
             Ok(())
         } else {
-            Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into())
+            Err(
+                ErrorKind::Fail("Expected index.md in the root directory".into()).into(),
+            )
         }
     } else {
-        info!("Checking that {:?} does not exist so can generate index",
-              path);
+        info!(
+            "Checking that {:?} does not exist so can generate index",
+            path
+        );
         if file_utils::check_file_exists(path) {
-            Err(ErrorKind::Fail("Should not have index.md in the root directory".into()).into())
+            Err(
+                ErrorKind::Fail("Should not have index.md in the root directory".into()).into(),
+            )
         } else {
             Ok(())
 
