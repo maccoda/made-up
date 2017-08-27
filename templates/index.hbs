@@ -1,38 +1,10 @@
-<html>
-
-<head>
-    <meta charset="utf-8">
-
-    <!-- Bootstrap theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
-    <link rel="stylesheet" href="made-up.css">
-    <!-- Apply user defined styles last -->
-    {{#each stylesheet as |style|}}
-    <link rel="stylesheet" type="text/css" href="{{style}}"> {{/each}}
-
-    <title>{{title}}</title>
-</head>
-
-<body>
-    <nav class="navbar navbar-default">
-        <div class="navbar-header">
-            <div class="container-fluid">
-                <ul class="nav navbar-nav">
-                    <a class="navbar-brand" href="index.html">Home</a>
-
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <div class="container-fluid">
-        <h1>Table of Contents</h1>
-        <ul>
-            {{#each element as |elem|}}
-            <li><a href="{{elem}}.html">{{elem}}</a></li>
-            {{/each}}
-        </ul>
-    </div>
-</body>
-
-</html>
+{{#*inline "content"}}
+<div class="container-fluid">
+    <h1>Table of Contents</h1>
+    <ul>
+        {{#each element as |elem|}}
+        <li><a href="{{elem}}.html">{{elem}}</a></li>
+        {{/each}}
+    </ul>
+</div>
+{{/inline}} {{~> (parent)~}}

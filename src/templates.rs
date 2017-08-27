@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 
 use handlebars::Handlebars;
-// NOTE Looks like this needs to be here
 use serde_json::Value;
 
 
@@ -11,13 +10,6 @@ use Result;
 
 /// Construct a generated index page for the site from the list of files used.
 pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Result<String> {
-    const TEMPLATE_NAME: &'static str = "index";
-    // Build the page from the template just to make it easier for future us
-    let mut handlebars = Handlebars::new();
-    handlebars
-        .register_template_string(TEMPLATE_NAME, include_str!("../templates/index.hbs"))
-        .unwrap();
-
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     data.insert("stylesheet".to_string(),
                 Value::Array(config
@@ -33,20 +25,11 @@ pub fn generate_index(files: &MarkdownFileList, config: &Configuration) -> Resul
                                  .iter()
                                  .map(|x| Value::String(x.get_file_name()))
                                  .collect()));
-
-    let output = handlebars.render(TEMPLATE_NAME, &data)?;
-    Ok(output)
+    Ok(build_template(&data, include_str!("../templates/index.hbs")))
 }
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
 pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String> {
-    const TEMPLATE_NAME: &'static str = "basic";
-    // Build the page from the template just to make it easier for future us
-    let mut handlebars = Handlebars::new();
-    handlebars
-        .register_template_string(TEMPLATE_NAME, include_str!("../templates/basic.hbs"))
-        .unwrap();
-
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     data.insert("stylesheet".to_string(),
                 Value::Array(config
@@ -57,8 +40,24 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
     data.insert("title".to_string(), Value::String(config.title()));
     data.insert("md_content".to_string(), Value::String(content));
 
-    let output = handlebars.render(TEMPLATE_NAME, &data)?;
-    Ok(output)
+    Ok(build_template(&data, include_str!("../templates/basic.hbs")))
+}
+
+/// Constructs Handlebars template from the provided variable data. Uses partial templates
+/// to produce consistent container.
+fn build_template(data: &BTreeMap<String, Value>, template_content: &str) -> String {
+    let mut handlebars = Handlebars::new();
+    // Render the partials
+    handlebars.register_template_string("container", include_str!("../templates/container.hbs"))
+        .ok()
+        .unwrap();
+    handlebars.register_template_string("index", template_content).ok().unwrap();
+    let mut data = data.clone();
+    // Add name of the container to be loaded (just a constant for now)
+    data.insert("parent".to_string(), Value::String("container".to_owned()));
+
+    // That's all we need to build this thing
+    handlebars.render("index", &data).unwrap()
 }
 
 #[cfg(test)]
