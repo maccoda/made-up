@@ -1,10 +1,6 @@
-{{#*inline "content"}}
-<div class="container-fluid">
-    <h1>Table of Contents</h1>
-    <ul>
-        {{#each element as |elem|}}
-        <li><a href="{{elem}}.html">{{elem}}</a></li>
-        {{/each}}
-    </ul>
-</div>
-{{/inline}} {{~> (parent)~}}
+<h1>Table of Contents</h1>
+<ul>
+    {{#each element as |elem|}}
+    <li><a href="{{elem}}.html">{{elem}}</a></li>
+    {{/each}}
+</ul>

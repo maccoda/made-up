@@ -77,26 +77,31 @@ impl Convertor {
     /// * Find all markdown files to use
     /// * Convert all to HTML
     pub fn generate_site(&self) -> Result<Vec<ConvertedFile>> {
-        info!("Generating site");
         let mut converted_files = vec![];
 
         let all_files = find_all_files(&self.root_dir)?;
 
         let out_dir = self.configuration.out_dir();
-        if self.configuration.gen_index() {
-            debug!("Index to be generated");
-            let index_content = templates::generate_index(&all_files, &self.configuration).unwrap();
-            converted_files.push(ConvertedFile {
-                path: PathBuf::from(&out_dir).join("index.html"),
-                content: index_content,
-            })
-        }
+
         for file in all_files.get_files() {
-            let result = create_html(file.get_path(), &self.configuration).unwrap();
+            let result = create_html(file.get_path(), &self.configuration)?;
             converted_files.push(ConvertedFile {
                 path: PathBuf::from(&out_dir).join(format!("{}.html", file.get_file_name())),
                 content: result,
             })
+        }
+
+        if self.configuration.index_template().is_none() {
+            debug!("Using default index template");
+            let index_content = templates::generate_index(&all_files, &self.configuration)?;
+            converted_files.push(ConvertedFile {
+                path: PathBuf::from(&out_dir).join("index.html"),
+                content: index_content,
+            })
+        } else {
+            // Generate it from what we have been given
+            debug!("Using user defined index template");
+            unimplemented!("Have yet to implement");
         }
 
         Ok(converted_files)
@@ -124,7 +129,7 @@ impl Convertor {
             fs::create_dir_all(&images_dest)?;
             for entry in fs::read_dir(format!("{}/images", self.root_dir.to_str().unwrap()))? {
                 let entry = entry?;
-                info!("Copying {:?}", entry.file_name());
+                debug!("Copying {:?}", entry.file_name());
                 file_utils::copy_file(
                     &images_source,
                     &images_dest,
@@ -215,34 +220,19 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
 /// Processes the configuration and produces a configuration addressing if
 /// aspects are not present and other implications.
 fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
-    // If not specified don't generate, if true better not have an index present
-    let path = root_dir.as_ref().join("index.md");
-    if !config.gen_index() {
+    if config.index_template().is_some() {
+        let path = root_dir.as_ref().join(config.index_template().unwrap());
         info!(
             "Checking that {:?} exists like the configuration says it will",
             path
         );
-        if file_utils::check_file_exists(path) {
-            Ok(())
-        } else {
-            Err(
+        if !file_utils::check_file_exists(path) {
+            return Err(
                 ErrorKind::Fail("Expected index.md in the root directory".into()).into(),
-            )
-        }
-    } else {
-        info!(
-            "Checking that {:?} does not exist so can generate index",
-            path
-        );
-        if file_utils::check_file_exists(path) {
-            Err(
-                ErrorKind::Fail("Should not have index.md in the root directory".into()).into(),
-            )
-        } else {
-            Ok(())
-
+            );
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -273,24 +263,24 @@ mod tests {
         assert!(super::handle_config(&"resouces", &config).is_err());
     }
 
-    // Ensure that return error when index is found but configured to generate one
-    #[test]
-    fn test_fail_handle_config_with_index() {
-        let config = super::config::Configuration::from("resources/mdup.yml").unwrap();
-        let _ = fs::File::create("resources/index.md").unwrap();
-        assert!(super::handle_config(&"resources", &config).is_err());
-        fs::remove_file("resources/index.md").unwrap();
-    }
-
     // Ensure that return positive result when the index is not to be generated and one exists
     #[test]
     fn test_pass_handle_config() {
         let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
             .unwrap();
         let mut tmp_dir = env::temp_dir();
-        tmp_dir.push("index.md");
+        tmp_dir.push("index_test.hbs");
 
         File::create(tmp_dir).unwrap();
         assert!(super::handle_config(&env::temp_dir(), &config).is_ok());
+    }
+
+    // TODO Need to test that an index is generated according to a user defined template
+
+    #[test]
+    fn test_user_index_template() {
+        let config = super::config::Configuration::from(
+            "tests/resources/test_conf_user_template.yml",
+        ).unwrap();
     }
 }

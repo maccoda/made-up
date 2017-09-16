@@ -1,4 +1,3 @@
 stylesheet:
   - "style.css"
   - "second_style.css"
-gen_index: true
