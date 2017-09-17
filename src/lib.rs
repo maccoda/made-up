@@ -91,18 +91,20 @@ impl Convertor {
             })
         }
 
-        if self.configuration.index_template().is_none() {
+        let index_content = if self.configuration.index_template().is_none() {
             debug!("Using default index template");
-            let index_content = templates::generate_index(&all_files, &self.configuration)?;
-            converted_files.push(ConvertedFile {
-                path: PathBuf::from(&out_dir).join("index.html"),
-                content: index_content,
-            })
+            templates::generate_index(&all_files, &self.configuration)?
         } else {
             // Generate it from what we have been given
             debug!("Using user defined index template");
-            unimplemented!("Have yet to implement");
-        }
+            let template_path = self.root_dir.join(self.configuration.index_template().unwrap());
+            templates::render_index_with_template(template_path, &all_files, &self.configuration)?
+        };
+
+        converted_files.push(ConvertedFile {
+            path: PathBuf::from(&out_dir).join("index.html"),
+            content: index_content,
+        });
 
         Ok(converted_files)
     }
@@ -239,7 +241,7 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
 mod tests {
     use test_utils;
     use std::env;
-    use std::fs::{self, File};
+    use std::fs::File;
     #[test]
     fn test_create_html() {
         // Read expected
@@ -273,14 +275,5 @@ mod tests {
 
         File::create(tmp_dir).unwrap();
         assert!(super::handle_config(&env::temp_dir(), &config).is_ok());
-    }
-
-    // TODO Need to test that an index is generated according to a user defined template
-
-    #[test]
-    fn test_user_index_template() {
-        let config = super::config::Configuration::from(
-            "tests/resources/test_conf_user_template.yml",
-        ).unwrap();
     }
 }

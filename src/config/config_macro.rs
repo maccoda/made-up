@@ -20,7 +20,9 @@ macro_rules! configuration {
                 /// Construct a `RawConfiguration` from the provided path. Will return an
                 /// error if unable to parse the YAML file.
                 fn from<P: AsRef<Path>>(config_path: P) -> Result<RawConfiguration, serde_yaml::Error> {
-                    serde_yaml::from_str(&file_utils::read_from_file(config_path))
+                    file_utils::read_from_file(config_path)
+                        .map_err(|err| serde_yaml::Error::io(err))
+                        .and_then(|contents| serde_yaml::from_str(&contents))
                 }
             }
             #[derive(Debug)]
