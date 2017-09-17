@@ -31,7 +31,7 @@ specified the default will be used.
 | Field | Type | Description | Default |
 |---|---| --- | --- |
 |`stylesheet` | Array<String> | List of paths for the stylesheets used for the site. | *[]* |
-|`gen_index` | Boolean | Choose if index page is to be generated. | *False* |
+|`index_template` | String | Path to the user defined template to use to generate the index page. This must be a relative path from the root directory. | *''* |
 | `out_dir`| String | Path to the output directory. | *./out*|
 | `copy_resources` | Boolean | Specify if the stylesheet and images are to be copied or just referenced. | *True* |
 | `title` | String | Title to be in the `<head>` of the generated site. | *Title* |

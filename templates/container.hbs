@@ -3,18 +3,19 @@
 <head>
     <meta charset="utf-8">
 
-    <title>Title - Home</title>
+    <title>{{title}}</title>
+
     <!-- Bootstrap theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
     <!-- Highlight.js -->
     <link rel="stylesheet" href="highlight.css">
     <link rel="stylesheet" href="tomorrow-night.css">
+
     <link rel="stylesheet" href="made-up.css">
     <!-- Apply user defined styles last -->
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="stylesheet" type="text/css" href="second_style.css">
-
+    {{#each stylesheet as |style|}}
+    <link rel="stylesheet" type="text/css" href="{{style}}"> {{/each}}
 </head>
 
 <body>
@@ -28,16 +29,12 @@
             </div>
         </div>
     </nav>
+
     <div class="container-fluid">
-        <h1>Table of Contents</h1>
-        <ul>
-
-            <li><a href="all_test.html">all_test</a></li>
-
-            <li><a href="second-page.html">second-page</a></li>
-
-        </ul>
+        {{> content}}
     </div>
+
+
     <script src="highlight.js"></script>
     <script>
         hljs.initHighlightingOnLoad();

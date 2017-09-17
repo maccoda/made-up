@@ -1,0 +1,16 @@
+<!-- This template does not represent an entire HTML like the others but instead
+it is a template for how the body of the index page should be displayed-->
+<p>
+    Welcome to my little site! This is a little collection of some of my pages.
+</p>
+
+<ul>
+    {{#each element as |elem|}}
+    <li><a href="{{elem}}.html">{{elem}}</a></li>
+    {{/each}}
+</ul>
+
+And then finish it off with some links
+<ul>
+    <li><a href="https://www.github.com/maccoda">Github</a></li>
+</ul>

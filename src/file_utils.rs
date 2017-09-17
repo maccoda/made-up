@@ -10,11 +10,11 @@ pub fn write_to_file<P: AsRef<Path>>(file_name: P, content_to_write: String) {
 }
 
 /// Reads and returns the contents of the file at the path provided.
-pub fn read_from_file<P: AsRef<Path>>(file_name: P) -> String {
+pub fn read_from_file<P: AsRef<Path>>(file_name: P) -> io::Result<String> {
     let mut content = String::new();
-    let mut file = File::open(file_name).unwrap();
-    file.read_to_string(&mut content).unwrap();
-    content
+    let mut file = File::open(file_name)?;
+    file.read_to_string(&mut content)?;
+    Ok(content)
 }
 
 /// Checks if a file exists. Will return false if it exists or it exists but is a directory.
@@ -28,10 +28,11 @@ pub fn check_dir_exists<P: AsRef<Path>>(path: P) -> bool {
 }
 
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
-pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
-                                                 dest_dir: &Q,
-                                                 file_name: &str)
-                                                 -> Result<(), io::Error> {
+pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(
+    source_dir: &P,
+    dest_dir: &Q,
+    file_name: &str,
+) -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
     info!("Performing copy {:?} -> {:?}", source, dest);
@@ -57,7 +58,7 @@ mod tests {
         // Check is not a directory
         assert!(!fs::metadata(&tmp_dir).unwrap().is_dir());
 
-        assert_eq!(CONTENT, super::read_from_file(&tmp_dir));
+        assert_eq!(CONTENT, super::read_from_file(&tmp_dir).unwrap());
 
         fs::remove_file(&tmp_dir).unwrap();
     }

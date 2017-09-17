@@ -76,15 +76,14 @@ fn is_excluded(entry: &DirEntry) -> bool {
 /// this also includes any Markdown files beginning with an underscore.
 pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFile>, io::Error> {
     let mut files = vec![];
-    let files_to_check = WalkDir::new(root_dir)
-        .into_iter()
-        .filter_entry(|file| !is_excluded(file));
+    let files_to_check = WalkDir::new(root_dir).into_iter().filter_entry(
+        |file| !is_excluded(file),
+    );
     for entry in files_to_check {
         let entry = entry?;
         let path = entry.path();
         if is_accepted_markdown_file(path) {
-            info!("Adding file {:?}", path);
-            // info!("Parent: {:?}", path.parent());
+            debug!("Adding file {:?}", path);
             files.push(MarkdownFile::from(path));
         }
     }
