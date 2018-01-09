@@ -1,5 +1,5 @@
-extern crate made_up;
 extern crate log;
+extern crate made_up;
 use std::fs;
 use std::env;
 
@@ -25,13 +25,11 @@ fn test_it() {
     println!("Writing config: {}", config_content);
     common::write_to_file(CONFIG_FILE, config_content);
 
-
     // Let's start the testing
     let convertor: made_up::Convertor =
         made_up::Convertor::new("resources").expect("Failed Convertor::new");
     let files = convertor.generate_site().expect("Failed generate_site");
     convertor.write_files(files).expect("Failed write_files");
-
 
     println!(
         "Checking that files exist under {}",
@@ -69,8 +67,7 @@ fn test_it() {
 
     // Ensure the images were move across successfully
     assert!(common::check_file_exists(
-        tmp_dir.to_string_lossy().to_string() +
-            "/images/rustacean-orig-noshadow.png",
+        tmp_dir.to_string_lossy().to_string() + "/images/rustacean-orig-noshadow.png",
     ));
 
     // Ensure the default styles were written
@@ -84,8 +81,7 @@ fn test_it() {
         tmp_dir.to_string_lossy().to_string() + "/made-up.css",
     ));
     assert!(common::check_file_exists(
-        tmp_dir.to_string_lossy().to_string() +
-            "/tomorrow-night.css",
+        tmp_dir.to_string_lossy().to_string() + "/tomorrow-night.css",
     ));
     fs::remove_dir_all(tmp_dir).expect("Unable to delete tmp dir");
     common::write_to_file(CONFIG_FILE, old_config_content);

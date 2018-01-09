@@ -70,7 +70,6 @@ fn print_start_elem(tag: &Tag) -> String {
             unimplemented!();
         }
     }
-
 }
 
 /// Mapping of closing Markdown tag to HTML tag
@@ -98,7 +97,6 @@ fn print_end_elem(tag: &Tag) -> String {
             unimplemented!();
         }
     }
-
 }
 
 /// Convert the given string to defined standard for ID

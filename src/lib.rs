@@ -1,20 +1,18 @@
-extern crate pulldown_cmark;
-extern crate handlebars;
-extern crate walkdir;
-extern crate serde_json;
-#[macro_use]
-extern crate log;
-extern crate serde_yaml;
-#[macro_use]
-extern crate serde_derive;
 #[macro_use]
 extern crate error_chain;
+extern crate handlebars;
+#[macro_use]
+extern crate log;
+extern crate pulldown_cmark;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate serde_yaml;
+extern crate walkdir;
 
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
-
-
 
 mod html;
 mod walker;
@@ -28,7 +26,7 @@ mod test_utils;
 use walker::MarkdownFileList;
 
 /// Error type for the conversion of the markdown files to the static site.
-error_chain!{
+error_chain! {
     foreign_links {
         IO(std::io::Error);
         Template(handlebars::RenderError);
@@ -97,7 +95,8 @@ impl Convertor {
         } else {
             // Generate it from what we have been given
             debug!("Using user defined index template");
-            let template_path = self.root_dir.join(self.configuration.index_template().unwrap());
+            let template_path = self.root_dir
+                .join(self.configuration.index_template().unwrap());
             templates::render_index_with_template(template_path, &all_files, &self.configuration)?
         };
 
@@ -164,13 +163,9 @@ impl Convertor {
             tomorrow_night_css.to_owned(),
         );
 
-
-
         Ok(())
     }
 }
-
-
 
 /// Starting at the root directory provided, find all Markdown files within in.
 fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
@@ -185,18 +180,15 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
 fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> Result<String> {
     let mut content = String::new();
-    File::open(file_name).and_then(
-        |mut x| x.read_to_string(&mut content),
-    )?;
+    File::open(file_name).and_then(|mut x| x.read_to_string(&mut content))?;
     let parser = pulldown_cmark::Parser::new_ext(&content, pulldown_cmark::OPTION_ENABLE_TABLES);
 
     templates::encapsulate_bare_html(html::consume(parser), config)
 }
 
-
 /// Finds the configuration file and deserializes it.
 fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
-    const CONFIG_NAME: &'static str = "mdup.yml";
+    const CONFIG_NAME: &str = "mdup.yml";
     let full_path = path.as_ref().to_path_buf();
     debug!(
         "Starting search for configuration file at: {:?}",
@@ -210,13 +202,11 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
             }
         }
     }
-    Err(
-        ErrorKind::Fail(format!(
-            "Configuration file: {} not found in {}",
-            CONFIG_NAME,
-            fs::canonicalize(path).unwrap().display()
-        )).into(),
-    )
+    Err(ErrorKind::Fail(format!(
+        "Configuration file: {} not found in {}",
+        CONFIG_NAME,
+        fs::canonicalize(path).unwrap().display()
+    )).into())
 }
 
 /// Processes the configuration and produces a configuration addressing if
@@ -229,9 +219,7 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
             path
         );
         if !file_utils::check_file_exists(path) {
-            return Err(
-                ErrorKind::Fail("Expected index.md in the root directory".into()).into(),
-            );
+            return Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into());
         }
     }
     Ok(())
@@ -242,6 +230,7 @@ mod tests {
     use test_utils;
     use std::env;
     use std::fs::File;
+
     #[test]
     fn test_create_html() {
         // Read expected
@@ -260,16 +249,16 @@ mod tests {
     // Ensure that return error when no index found but specified it should not generate one
     #[test]
     fn test_fail_handle_config_no_index() {
-        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
-            .unwrap();
+        let config =
+            super::config::Configuration::from("tests/resources/test_conf_all.yml").unwrap();
         assert!(super::handle_config(&"resouces", &config).is_err());
     }
 
     // Ensure that return positive result when the index is not to be generated and one exists
     #[test]
     fn test_pass_handle_config() {
-        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
-            .unwrap();
+        let config =
+            super::config::Configuration::from("tests/resources/test_conf_all.yml").unwrap();
         let mut tmp_dir = env::temp_dir();
         tmp_dir.push("index_test.hbs");
 

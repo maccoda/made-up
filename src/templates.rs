@@ -4,7 +4,6 @@ use std::path::Path;
 use handlebars::Handlebars;
 use serde_json::Value;
 
-
 use MarkdownFileList;
 use config::Configuration;
 use Result;
@@ -130,8 +129,8 @@ mod tests {
 
     #[test]
     fn test_index_from_template() {
-        let config = config::Configuration::from("tests/resources/test_conf_user_template.yml")
-            .unwrap();
+        let config =
+            config::Configuration::from("tests/resources/test_conf_user_template.yml").unwrap();
         let expected = include_str!("../tests/resources/user_index_good.html");
         let actual = super::render_index_with_template(
             "tests/resources/index_test.hbs",

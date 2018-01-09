@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 
 use walkdir::{DirEntry, WalkDir, WalkDirIterator};
 
-
 /// Wrapper of a list of Markdown files. With end goal to be able to convey the
 /// hierarchy.
 pub struct MarkdownFileList {
@@ -15,7 +14,9 @@ impl MarkdownFileList {
     pub fn new(files: Vec<MarkdownFile>) -> MarkdownFileList {
         let mut sorted_files = files;
         sorted_files.sort_by(|a, b| a.get_file_name().cmp(&b.get_file_name()));
-        MarkdownFileList { files: sorted_files }
+        MarkdownFileList {
+            files: sorted_files,
+        }
     }
     /// Get all Markdown files
     pub fn get_files(&self) -> &Vec<MarkdownFile> {
@@ -31,7 +32,9 @@ pub struct MarkdownFile {
 impl MarkdownFile {
     /// Creates a `MarkdownFile` from the provided path
     pub fn from(path: &Path) -> MarkdownFile {
-        MarkdownFile { path: path.to_path_buf() }
+        MarkdownFile {
+            path: path.to_path_buf(),
+        }
     }
     // Return the path of the Markdown file
     pub fn get_path(&self) -> &PathBuf {
@@ -50,7 +53,7 @@ impl MarkdownFile {
 }
 
 fn is_accepted_markdown_file(path: &Path) -> bool {
-    const FILE_EXT: &'static str = "md";
+    const FILE_EXT: &str = "md";
     if let Some(extension) = path.extension().and_then(|x| x.to_str()) {
         if extension.to_lowercase().eq(FILE_EXT) {
             return true;
@@ -76,9 +79,9 @@ fn is_excluded(entry: &DirEntry) -> bool {
 /// this also includes any Markdown files beginning with an underscore.
 pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFile>, io::Error> {
     let mut files = vec![];
-    let files_to_check = WalkDir::new(root_dir).into_iter().filter_entry(
-        |file| !is_excluded(file),
-    );
+    let files_to_check = WalkDir::new(root_dir)
+        .into_iter()
+        .filter_entry(|file| !is_excluded(file));
     for entry in files_to_check {
         let entry = entry?;
         let path = entry.path();
@@ -94,9 +97,12 @@ pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFi
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
+
     #[test]
     fn test_get_file_name() {
-        let file = super::MarkdownFile { path: PathBuf::from("resources/tester.md") };
+        let file = super::MarkdownFile {
+            path: PathBuf::from("resources/tester.md"),
+        };
         assert_eq!(file.get_file_name(), "tester");
     }
 

@@ -16,9 +16,11 @@ fn main() {
                 .index(1)
                 .required(false),
         )
-        .arg(Arg::with_name("debug").help("Debug level logs").long(
-            "debug",
-        ))
+        .arg(
+            Arg::with_name("debug")
+                .help("Debug level logs")
+                .long("debug"),
+        )
         .get_matches();
 
     let log_level = if matches.is_present("debug") {
@@ -37,7 +39,6 @@ fn main() {
     let files = handle_error(convertor.generate_site());
     handle_error(convertor.write_files(files));
 }
-
 
 use std::fmt::Debug;
 fn handle_error<T: Debug>(possible_error: Result<T, Error>) -> T {
