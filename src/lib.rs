@@ -1,20 +1,18 @@
-extern crate pulldown_cmark;
-extern crate handlebars;
-extern crate walkdir;
-extern crate serde_json;
-#[macro_use]
-extern crate log;
-extern crate serde_yaml;
-#[macro_use]
-extern crate serde_derive;
 #[macro_use]
 extern crate error_chain;
+extern crate handlebars;
+#[macro_use]
+extern crate log;
+extern crate pulldown_cmark;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate serde_yaml;
+extern crate walkdir;
 
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
-
-
 
 mod html;
 mod walker;
@@ -28,10 +26,11 @@ mod test_utils;
 use walker::MarkdownFileList;
 
 /// Error type for the conversion of the markdown files to the static site.
-error_chain!{
+error_chain! {
     foreign_links {
         IO(std::io::Error);
         Template(handlebars::RenderError);
+        TemplateCompile(handlebars::TemplateError);
         Config(serde_yaml::Error);
     }
 
@@ -90,15 +89,21 @@ impl Convertor {
                 content: result,
             })
         }
-
-        let index_content = if self.configuration.index_template().is_none() {
-            debug!("Using default index template");
-            templates::generate_index(&all_files, &self.configuration)?
-        } else {
-            // Generate it from what we have been given
-            debug!("Using user defined index template");
-            let template_path = self.root_dir.join(self.configuration.index_template().unwrap());
-            templates::render_index_with_template(template_path, &all_files, &self.configuration)?
+        let index_content = match self.configuration.index_template() {
+            Some(index_path) => {
+                // Generate it from what we have been given
+                debug!("Using user defined index template");
+                let template_path = self.root_dir.join(index_path);
+                templates::render_index_with_template(
+                    template_path,
+                    &all_files,
+                    &self.configuration,
+                )?
+            }
+            None => {
+                debug!("Using default index template");
+                templates::generate_index(&all_files, &self.configuration)?
+            }
         };
 
         converted_files.push(ConvertedFile {
@@ -109,15 +114,17 @@ impl Convertor {
         Ok(converted_files)
     }
 
+    const IMAGE_DIR: &'static str = "images";
     /// Write the files provided to the file system
     ///
-    /// The files provided will already be produced using `generate_site` and hence have all configuration information present
+    /// The files provided will already be produced using `generate_site` and
+    /// hence have all configuration information present
     pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<()> {
         if !file_utils::check_dir_exists(self.configuration.out_dir()) {
             fs::create_dir(self.configuration.out_dir())?;
         }
         for file in files {
-            file_utils::write_to_file(file.path, file.content);
+            file_utils::write_to_file(file.path, file.content)?;
         }
         if self.configuration.copy_resources() {
             for stylesheet in &self.configuration.stylesheet() {
@@ -126,10 +133,11 @@ impl Convertor {
             }
 
             // Copy across the images
-            let images_source = self.root_dir.join("images");
-            let images_dest = format!("{}/images", self.configuration.out_dir());
+            let images_source = self.root_dir.join(Convertor::IMAGE_DIR);
+            let images_dest =
+                PathBuf::from(self.configuration.out_dir()).join(Convertor::IMAGE_DIR);
             fs::create_dir_all(&images_dest)?;
-            for entry in fs::read_dir(format!("{}/images", self.root_dir.to_str().unwrap()))? {
+            for entry in fs::read_dir(&images_source)? {
                 let entry = entry?;
                 debug!("Copying {:?}", entry.file_name());
                 file_utils::copy_file(
@@ -150,27 +158,23 @@ impl Convertor {
         file_utils::write_to_file(
             self.configuration.out_dir() + "/highlight.css",
             highlight_css.to_owned(),
-        );
+        )?;
         file_utils::write_to_file(
             self.configuration.out_dir() + "/highlight.js",
             highlight_js.to_owned(),
-        );
+        )?;
         file_utils::write_to_file(
             self.configuration.out_dir() + "/made-up.css",
             made_up_css.to_owned(),
-        );
+        )?;
         file_utils::write_to_file(
             self.configuration.out_dir() + "/tomorrow-night.css",
             tomorrow_night_css.to_owned(),
-        );
-
-
+        )?;
 
         Ok(())
     }
 }
-
-
 
 /// Starting at the root directory provided, find all Markdown files within in.
 fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
@@ -185,18 +189,15 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
 fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> Result<String> {
     let mut content = String::new();
-    File::open(file_name).and_then(
-        |mut x| x.read_to_string(&mut content),
-    )?;
+    File::open(file_name).and_then(|mut x| x.read_to_string(&mut content))?;
     let parser = pulldown_cmark::Parser::new_ext(&content, pulldown_cmark::OPTION_ENABLE_TABLES);
 
     templates::encapsulate_bare_html(html::consume(parser), config)
 }
 
-
 /// Finds the configuration file and deserializes it.
 fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
-    const CONFIG_NAME: &'static str = "mdup.yml";
+    const CONFIG_NAME: &str = "mdup.yml";
     let full_path = path.as_ref().to_path_buf();
     debug!(
         "Starting search for configuration file at: {:?}",
@@ -210,17 +211,16 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
             }
         }
     }
-    Err(
-        ErrorKind::Fail(format!(
-            "Configuration file: {} not found in {}",
-            CONFIG_NAME,
-            fs::canonicalize(path).unwrap().display()
-        )).into(),
-    )
+    Err(ErrorKind::Fail(format!(
+        "Configuration file: {} not found in {}",
+        CONFIG_NAME,
+        full_path.display()
+    )).into())
 }
 
-/// Processes the configuration and produces a configuration addressing if
-/// aspects are not present and other implications.
+/// Processes the configuration and ensure the environment is in a state
+/// matching the definition in the configuration. This function will ensure:
+/// * When the index template is specifed, that the specified file exists.
 fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
     if config.index_template().is_some() {
         let path = root_dir.as_ref().join(config.index_template().unwrap());
@@ -229,9 +229,9 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
             path
         );
         if !file_utils::check_file_exists(path) {
-            return Err(
-                ErrorKind::Fail("Expected index.md in the root directory".into()).into(),
-            );
+            return Err(ErrorKind::Fail(
+                "Did not find index template specified in configuration".into(),
+            ).into());
         }
     }
     Ok(())
@@ -242,12 +242,14 @@ mod tests {
     use test_utils;
     use std::env;
     use std::fs::File;
+
     #[test]
     fn test_create_html() {
         // Read expected
-        let config = super::config::Configuration::from("resources/mdup.yml").unwrap();
-        let expected = include_str!("../tests/resources/all_test_good.html");
-        let actual = super::create_html("resources/all_test.md", &config).unwrap();
+        let config =
+            super::config::Configuration::from("tests/resources/input/site/mdup.yml").unwrap();
+        let expected = include_str!("../tests/resources/output/all_test_good.html");
+        let actual = super::create_html("tests/resources/input/site/all_test.md", &config).unwrap();
         test_utils::compare_string_content(expected, &actual);
     }
 
@@ -260,16 +262,16 @@ mod tests {
     // Ensure that return error when no index found but specified it should not generate one
     #[test]
     fn test_fail_handle_config_no_index() {
-        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
-            .unwrap();
-        assert!(super::handle_config(&"resouces", &config).is_err());
+        let config =
+            super::config::Configuration::from("tests/resources/input/test_conf_all.yml").unwrap();
+        assert!(super::handle_config(&"templates", &config).is_err());
     }
 
     // Ensure that return positive result when the index is not to be generated and one exists
     #[test]
     fn test_pass_handle_config() {
-        let config = super::config::Configuration::from("tests/resources/test_conf_all.yml")
-            .unwrap();
+        let config =
+            super::config::Configuration::from("tests/resources/input/test_conf_all.yml").unwrap();
         let mut tmp_dir = env::temp_dir();
         tmp_dir.push("index_test.hbs");
 

@@ -1,5 +1,7 @@
 use std::path::Path;
 use serde_yaml;
+use Result;
+use ErrorKind;
 
 use super::file_utils;
 #[macro_use]
@@ -20,7 +22,7 @@ mod tests {
     use super::{Configuration, RawConfiguration};
     #[test]
     fn test_raw_read() {
-        let actual = RawConfiguration::from("tests/resources/test_conf.yml").unwrap();
+        let actual = RawConfiguration::from("tests/resources/input/test_conf.yml").unwrap();
         assert_eq!(actual.stylesheet, Some(vec!["test_style.css".to_string()]));
         assert_eq!(actual.index_template, None);
         assert_eq!(actual.out_dir, None);
@@ -30,7 +32,7 @@ mod tests {
 
     #[test]
     fn test_raw_read_all() {
-        let actual = RawConfiguration::from("tests/resources/test_conf_all.yml").unwrap();
+        let actual = RawConfiguration::from("tests/resources/input/test_conf_all.yml").unwrap();
         assert_eq!(
             actual.stylesheet,
             Some(vec![
@@ -50,7 +52,7 @@ mod tests {
 
     #[test]
     fn test_read() {
-        let actual = Configuration::from("tests/resources/test_conf.yml").unwrap();
+        let actual = Configuration::from("tests/resources/input/test_conf.yml").unwrap();
         assert_eq!(actual.stylesheet, vec!["test_style.css".to_string()]);
         assert_eq!(actual.index_template, None);
         assert_eq!(actual.out_dir, "out".to_string());
@@ -60,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_read_all() {
-        let actual = Configuration::from("tests/resources/test_conf_all.yml").unwrap();
+        let actual = Configuration::from("tests/resources/input/test_conf_all.yml").unwrap();
         assert_eq!(
             actual.stylesheet,
             vec![

@@ -1,5 +1,5 @@
-extern crate made_up;
 extern crate log;
+extern crate made_up;
 use std::fs;
 use std::env;
 
@@ -12,7 +12,7 @@ fn test_it() {
         max_log_level.set(::log::LogLevelFilter::Debug);
         Box::new(SimpleLogger)
     }).unwrap();
-    const CONFIG_FILE: &str = "resources/mdup.yml";
+    const CONFIG_FILE: &str = "tests/resources/input/site/mdup.yml";
     // Need to use temporary directories for this
     // Ammend the configuration
     let tmp_dir = env::temp_dir();
@@ -25,13 +25,11 @@ fn test_it() {
     println!("Writing config: {}", config_content);
     common::write_to_file(CONFIG_FILE, config_content);
 
-
     // Let's start the testing
     let convertor: made_up::Convertor =
-        made_up::Convertor::new("resources").expect("Failed Convertor::new");
+        made_up::Convertor::new("tests/resources/input/site").expect("Failed Convertor::new");
     let files = convertor.generate_site().expect("Failed generate_site");
     convertor.write_files(files).expect("Failed write_files");
-
 
     println!(
         "Checking that files exist under {}",
@@ -54,23 +52,22 @@ fn test_it() {
     ));
 
     println!("Checking all_test content");
-    let expected = include_str!("../tests/resources/all_test_good.html");
+    let expected = include_str!("../tests/resources/output/all_test_good.html");
     let actual = common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/all_test.html");
     common::compare_string_content(expected, &actual.to_string());
     println!("Checking index content");
-    let expected = include_str!("../tests/resources/index_good.html");
+    let expected = include_str!("../tests/resources/output/index_good.html");
     let actual = common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/index.html");
     common::compare_string_content(expected, &actual.to_string());
     println!("Checking second-page content");
-    let expected = include_str!("../tests/resources/second-page_good.html");
+    let expected = include_str!("../tests/resources/output/second-page_good.html");
     let actual =
         common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/second-page.html");
     common::compare_string_content(expected, &actual.to_string());
 
     // Ensure the images were move across successfully
     assert!(common::check_file_exists(
-        tmp_dir.to_string_lossy().to_string() +
-            "/images/rustacean-orig-noshadow.png",
+        tmp_dir.to_string_lossy().to_string() + "/images/rustacean-orig-noshadow.png",
     ));
 
     // Ensure the default styles were written
@@ -84,8 +81,7 @@ fn test_it() {
         tmp_dir.to_string_lossy().to_string() + "/made-up.css",
     ));
     assert!(common::check_file_exists(
-        tmp_dir.to_string_lossy().to_string() +
-            "/tomorrow-night.css",
+        tmp_dir.to_string_lossy().to_string() + "/tomorrow-night.css",
     ));
     fs::remove_dir_all(tmp_dir).expect("Unable to delete tmp dir");
     common::write_to_file(CONFIG_FILE, old_config_content);

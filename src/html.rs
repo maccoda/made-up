@@ -70,7 +70,6 @@ fn print_start_elem(tag: &Tag) -> String {
             unimplemented!();
         }
     }
-
 }
 
 /// Mapping of closing Markdown tag to HTML tag
@@ -98,19 +97,18 @@ fn print_end_elem(tag: &Tag) -> String {
             unimplemented!();
         }
     }
-
 }
 
 /// Convert the given string to defined standard for ID
 /// * All lower case
-/// * Spaces replaces with hyphens
+/// * Spaces replaced with hyphens
 fn name_to_id(name: &str) -> String {
     name.to_lowercase().replace(" ", "-")
 }
 
 pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
     let mut consumer = Consumer {
-        iter: iter,
+        iter,
         buffer: String::new(),
         current: None,
     };
@@ -120,6 +118,7 @@ pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
 #[cfg(test)]
 mod tests {
     use test_utils;
+
     #[test]
     fn test_name_to_id() {
         let actual = super::name_to_id("A very lOng name or Heading");
@@ -136,13 +135,13 @@ mod tests {
         use std::io::Read;
 
         let mut content = String::new();
-        File::open("resources/all_test.md")
+        File::open("tests/resources/input/site/all_test.md")
             .and_then(|mut x| x.read_to_string(&mut content))
             .unwrap();
         let parser = Parser::new_ext(&content, OPTION_ENABLE_TABLES);
 
         let actual = super::consume(parser);
-        let expected = include_str!("../tests/resources/all_test_raw_good.html");
+        let expected = include_str!("../tests/resources/output/all_test_raw_good.html");
         test_utils::compare_string_content(expected, &actual);
     }
 }

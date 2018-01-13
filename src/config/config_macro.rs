@@ -19,10 +19,10 @@ macro_rules! configuration {
             impl RawConfiguration {
                 /// Construct a `RawConfiguration` from the provided path. Will return an
                 /// error if unable to parse the YAML file.
-                fn from<P: AsRef<Path>>(config_path: P) -> Result<RawConfiguration, serde_yaml::Error> {
+                fn from<P: AsRef<Path>>(config_path: P) ->
+                    Result<RawConfiguration> {
                     file_utils::read_from_file(config_path)
-                        .map_err(|err| serde_yaml::Error::io(err))
-                        .and_then(|contents| serde_yaml::from_str(&contents))
+                        .and_then(|contents| serde_yaml::from_str(&contents).map_err(|err|ErrorKind::Config(err).into()))
                 }
             }
             #[derive(Debug)]
@@ -44,7 +44,7 @@ macro_rules! configuration {
 
             impl Configuration {
                 /// Obtain a `Configuration` from the path provided.
-                pub fn from<P: AsRef<Path>>(path: P) -> Result<Configuration, serde_yaml::Error> {
+                pub fn from<P: AsRef<Path>>(path: P) -> Result<Configuration> {
                     let raw_config = RawConfiguration::from(path)?;
                     let def_config = Configuration::default();
                     $(
@@ -71,10 +71,11 @@ macro_rules! configuration {
 mod tests {
     use std::path::Path;
     use serde_yaml;
-
+    use Result;
+    use ErrorKind;
     use file_utils;
 
-    configuration!{
+    configuration! {
         stylesheet, String, "".to_string();
         gen_index, bool, false;
         out_dir, String, "out".to_string();

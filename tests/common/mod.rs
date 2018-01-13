@@ -31,20 +31,22 @@ pub fn check_file_exists<P: AsRef<Path>>(path: P) -> bool {
 
 /// Use to write to a file that is in a separate directory. This will ensure
 /// that directory is created and create if required before writing to the file.
-pub fn write_file_in_dir<P: AsRef<Path>>(file_name: P,
-                                         content_to_write: String,
-                                         dir: P)
-                                         -> io::Result<()> {
+pub fn write_file_in_dir<P: AsRef<Path>>(
+    file_name: P,
+    content_to_write: String,
+    dir: P,
+) -> io::Result<()> {
     fs::create_dir_all(&dir)?;
     write_to_file(dir.as_ref().join(file_name), content_to_write);
     Ok(())
 }
 
 /// Copies `file_name` located in `source_dir` across to `dest_dir` under the same name.
-pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(source_dir: &P,
-                                                 dest_dir: &Q,
-                                                 file_name: &str)
-                                                 -> Result<(), io::Error> {
+pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(
+    source_dir: &P,
+    dest_dir: &Q,
+    file_name: &str,
+) -> Result<(), io::Error> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
     let _ = fs::copy(source, dest)?;
@@ -65,8 +67,7 @@ pub fn compare_string_content(expected: &str, actual: &str) {
     assert_eq!(expected, actual);
 }
 
-
-use log::{LogLevel, LogRecord, LogMetadata};
+use log::{LogLevel, LogMetadata, LogRecord};
 
 pub struct SimpleLogger;
 
