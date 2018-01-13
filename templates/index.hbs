@@ -1,6 +1,8 @@
 <h1>Table of Contents</h1>
 <ul>
     {{#each element as |elem|}}
-    <li><a href="{{elem}}.html">{{elem}}</a></li>
+    <li>
+        <a href="{{elem.file_path}}.html">{{elem.header}}</a>
+    </li>
     {{/each}}
 </ul>

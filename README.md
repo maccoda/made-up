@@ -42,20 +42,19 @@ which ones do we have a simple convention. All files and directories that are to
 be ignored should begin with an underscore, all other markdown files will be a
 part of the site.
 
-### Index Page
-If the configuration property of `index` is set to *False*, that is the user has
-specified their own index file, Made-Up will expect to find a `index.md` in
-the root directory otherwise it will fail.
+### Index Template
+To allow for user defined index page but not needing to maintain the current
+list of pages, the user is able to define the path to a Handlebars template to be used to generate the index page. If this option is not provided the default template defined by [index.hbs](templates/index.hbs) will be applied.
+
+The elements of the site are provided under the list `element` which has two
+properties: `path` and `heading`, representing the path to the generated HTML
+and the top level heading respectively.
 
 ### Images
-To make things simple there is a simple convention for where to store your images so Made-Up knows where to get them from when generating your site. Who would have guessed it but if you put all your images in a directory in your root directory named **images** Made-Up will ensure these come across to the site. They will be copied across into another **images** directory so you will already doing the hard job of correctly referencing for Made-Up :).
+To make things simple there is a simple convention for where to store your
+images so Made-Up knows where to get them from when generating your site. Who
+would have guessed it but if you put all your images in a directory in your root
+directory named **images** Made-Up will ensure these come across to the site.
+They will be copied across into another **images** directory so you will already
+doing the hard job of correctly referencing for Made-Up :).
 
-## TODO
-
-Please see issues for functionality still to come. If there is some that you think is needed raise an issue with the `enhancement` label.
-
-### Technical
-- [X] ~~Get a logger in here please, no more println~~
-- [ ] Ensure properly handle errors
-- [ ] More testing!!! Let's try get 95% coverage!
-- [X] Tidy up code structure (particularly lib.rs)

@@ -101,14 +101,14 @@ fn print_end_elem(tag: &Tag) -> String {
 
 /// Convert the given string to defined standard for ID
 /// * All lower case
-/// * Spaces replaces with hyphens
+/// * Spaces replaced with hyphens
 fn name_to_id(name: &str) -> String {
     name.to_lowercase().replace(" ", "-")
 }
 
 pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
     let mut consumer = Consumer {
-        iter: iter,
+        iter,
         buffer: String::new(),
         current: None,
     };
@@ -118,6 +118,7 @@ pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
 #[cfg(test)]
 mod tests {
     use test_utils;
+
     #[test]
     fn test_name_to_id() {
         let actual = super::name_to_id("A very lOng name or Heading");

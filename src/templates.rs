@@ -1,8 +1,7 @@
-use std::collections::BTreeMap;
 use std::path::Path;
 
-use handlebars::Handlebars;
-use serde_json::Value;
+use handlebars::{to_json, Handlebars};
+use serde_json::{Map, Value as Json};
 
 use MarkdownFileList;
 use config::Configuration;
@@ -30,55 +29,59 @@ pub fn render_index_with_template<P: AsRef<Path>>(
     Ok(build_template(&data, template_content))
 }
 
+/// Element provided to the Handlebars template for creating the index page.
+/// Each element represents a single Markdown document on the input.
+#[derive(Serialize)]
+pub struct Element {
+    header: String,
+    file_path: String,
+}
+
 /// Populate the data map used to populate the index page template
-fn populate_index_data(
-    files: &MarkdownFileList,
-    config: &Configuration,
-) -> BTreeMap<String, Value> {
-    let mut data: BTreeMap<String, Value> = BTreeMap::new();
+fn populate_index_data(files: &MarkdownFileList, config: &Configuration) -> Map<String, Json> {
+    let mut data = Map::new();
     data.insert(
         "stylesheet".to_string(),
-        Value::Array(
+        Json::Array(
             config
                 .stylesheet()
                 .iter()
-                .map(|x| Value::String(x.to_owned()))
+                .map(|x| Json::String(x.to_owned()))
                 .collect(),
         ),
     );
     data.insert(
         "title".to_string(),
-        Value::String(config.title() + " - Home"),
+        Json::String(config.title() + " - Home"),
     );
-    data.insert(
-        "element".to_string(),
-        Value::Array(
-            files
-                .get_files()
-                .iter()
-                .map(|x| Value::String(x.get_file_name()))
-                .collect(),
-        ),
-    );
+    let elements: Vec<Element> = files
+        .get_files()
+        .iter()
+        .map(|x| Element {
+            header: x.get_heading().to_owned(),
+            file_path: x.get_file_name(),
+        })
+        .collect();
+    data.insert("element".to_string(), to_json(&elements));
 
     data
 }
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
 pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String> {
-    let mut data: BTreeMap<String, Value> = BTreeMap::new();
+    let mut data = Map::new();
     data.insert(
         "stylesheet".to_string(),
-        Value::Array(
+        Json::Array(
             config
                 .stylesheet()
                 .iter()
-                .map(|x| Value::String(x.to_owned()))
+                .map(|x| Json::String(x.to_owned()))
                 .collect(),
         ),
     );
-    data.insert("title".to_string(), Value::String(config.title()));
-    data.insert("md_content".to_string(), Value::String(content));
+    data.insert("title".to_string(), Json::String(config.title()));
+    data.insert("md_content".to_string(), Json::String(content));
 
     Ok(build_template(
         &data,
@@ -88,7 +91,7 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
 
 /// Constructs Handlebars template from the provided variable data. Uses partial templates
 /// to produce consistent container.
-fn build_template(data: &BTreeMap<String, Value>, template_content: &str) -> String {
+fn build_template(data: &Map<String, Json>, template_content: &str) -> String {
     let mut handlebars = Handlebars::new();
     // Render the partials
     handlebars
@@ -119,8 +122,8 @@ mod tests {
         let expected = include_str!("../tests/resources/index_good.html");
         let actual = super::generate_index(
             &super::MarkdownFileList::new(vec![
-                MarkdownFile::from(&Path::new("second-page.md")),
-                MarkdownFile::from(&Path::new("all_test.md")),
+                MarkdownFile::from(&Path::new("resources/second-page.md")),
+                MarkdownFile::from(&Path::new("resources/all_test.md")),
             ]),
             &config,
         ).unwrap();
@@ -135,8 +138,8 @@ mod tests {
         let actual = super::render_index_with_template(
             "tests/resources/index_test.hbs",
             &super::MarkdownFileList::new(vec![
-                MarkdownFile::from(&Path::new("second-page.md")),
-                MarkdownFile::from(&Path::new("all_test.md")),
+                MarkdownFile::from(&Path::new("resources/second-page.md")),
+                MarkdownFile::from(&Path::new("resources/all_test.md")),
             ]),
             &config,
         ).unwrap();
