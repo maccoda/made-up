@@ -1,5 +1,7 @@
 use std::path::Path;
 use serde_yaml;
+use Result;
+use ErrorKind;
 
 use super::file_utils;
 #[macro_use]

@@ -42,22 +42,23 @@ fn main() {
 
 use std::fmt::Debug;
 fn handle_error<T: Debug>(possible_error: Result<T, Error>) -> T {
-    if possible_error.is_err() {
-        match possible_error.unwrap_err() {
-            made_up::Error(ErrorKind::Config(e), _) => println!("Configuration Error: {:?}", e),
-            made_up::Error(ErrorKind::Fail(e), _) => println!("Error: {}", e),
-            made_up::Error(ErrorKind::IO(e), _) => println!("IO Error: {:?}", e),
-            made_up::Error(ErrorKind::Template(e), _) => {
-                println!("Template Generation Error: {:?}", e)
+    match possible_error {
+        Err(err) => {
+            match err {
+                made_up::Error(ErrorKind::Config(e), _) => println!("Configuration Error: {:?}", e),
+                made_up::Error(ErrorKind::Fail(e), _) => println!("Error: {}", e),
+                made_up::Error(ErrorKind::IO(e), _) => println!("IO Error: {:?}", e),
+                made_up::Error(ErrorKind::Template(e), _) => {
+                    println!("Template Generation Error: {:?}", e);
+                }
+                made_up::Error(ErrorKind::TemplateCompile(e), _) => {
+                    println!("Template Compilation Error: {:?}", e);
+                }
+                made_up::Error(ErrorKind::Msg(msg), _) => println!("{}", msg),
             }
-            made_up::Error(ErrorKind::TemplateCompile(e), _) => {
-                println!("Template Compilation Error: {:?}", e)
-            }
-            made_up::Error(ErrorKind::Msg(msg), _) => println!("{}", msg),
-        };
-        std::process::exit(1);
-    } else {
-        possible_error.unwrap()
+            std::process::exit(1);
+        }
+        Ok(res) => res,
     }
 }
 

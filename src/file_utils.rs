@@ -1,16 +1,18 @@
 use std::fs::{self, File};
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 use std::path::Path;
+use Result;
 
 /// Writes the provided content to a file at the path provided.
-pub fn write_to_file<P: AsRef<Path>>(file_name: P, content_to_write: String) {
-    let mut file = File::create(file_name).unwrap();
+pub fn write_to_file<P: AsRef<Path>>(file_name: P, content_to_write: String) -> Result<()> {
+    let mut file = File::create(file_name)?;
     let content: &[u8] = &(content_to_write.into_bytes())[..];
-    file.write_all(content).unwrap();
+    file.write_all(content)?;
+    Ok(())
 }
 
 /// Reads and returns the contents of the file at the path provided.
-pub fn read_from_file<P: AsRef<Path>>(file_name: P) -> io::Result<String> {
+pub fn read_from_file<P: AsRef<Path>>(file_name: P) -> Result<String> {
     let mut content = String::new();
     let mut file = File::open(file_name)?;
     file.read_to_string(&mut content)?;
@@ -32,7 +34,7 @@ pub fn copy_file<P: AsRef<Path>, Q: AsRef<Path>>(
     source_dir: &P,
     dest_dir: &Q,
     file_name: &str,
-) -> Result<(), io::Error> {
+) -> Result<()> {
     let source = source_dir.as_ref().join(&file_name);
     let dest = dest_dir.as_ref().join(&file_name);
     info!("Performing copy {:?} -> {:?}", source, dest);
@@ -52,7 +54,7 @@ mod tests {
     fn test_write_and_read_file() {
         let mut tmp_dir = env::temp_dir();
         tmp_dir.push(FILE_NAME);
-        super::write_to_file(&tmp_dir, String::from(CONTENT));
+        super::write_to_file(&tmp_dir, String::from(CONTENT)).unwrap();
         // Check it exists
         assert!(fs::metadata(&tmp_dir).is_ok());
         // Check is not a directory

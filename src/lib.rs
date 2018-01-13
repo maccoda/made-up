@@ -89,16 +89,21 @@ impl Convertor {
                 content: result,
             })
         }
-
-        let index_content = if self.configuration.index_template().is_none() {
-            debug!("Using default index template");
-            templates::generate_index(&all_files, &self.configuration)?
-        } else {
-            // Generate it from what we have been given
-            debug!("Using user defined index template");
-            let template_path = self.root_dir
-                .join(self.configuration.index_template().unwrap());
-            templates::render_index_with_template(template_path, &all_files, &self.configuration)?
+        let index_content = match self.configuration.index_template() {
+            Some(index_path) => {
+                // Generate it from what we have been given
+                debug!("Using user defined index template");
+                let template_path = self.root_dir.join(index_path);
+                templates::render_index_with_template(
+                    template_path,
+                    &all_files,
+                    &self.configuration,
+                )?
+            }
+            None => {
+                debug!("Using default index template");
+                templates::generate_index(&all_files, &self.configuration)?
+            }
         };
 
         converted_files.push(ConvertedFile {
@@ -109,15 +114,17 @@ impl Convertor {
         Ok(converted_files)
     }
 
+    const IMAGE_DIR: &'static str = "images";
     /// Write the files provided to the file system
     ///
-    /// The files provided will already be produced using `generate_site` and hence have all configuration information present
+    /// The files provided will already be produced using `generate_site` and
+    /// hence have all configuration information present
     pub fn write_files(&self, files: Vec<ConvertedFile>) -> Result<()> {
         if !file_utils::check_dir_exists(self.configuration.out_dir()) {
             fs::create_dir(self.configuration.out_dir())?;
         }
         for file in files {
-            file_utils::write_to_file(file.path, file.content);
+            file_utils::write_to_file(file.path, file.content)?;
         }
         if self.configuration.copy_resources() {
             for stylesheet in &self.configuration.stylesheet() {
@@ -126,10 +133,11 @@ impl Convertor {
             }
 
             // Copy across the images
-            let images_source = self.root_dir.join("images");
-            let images_dest = format!("{}/images", self.configuration.out_dir());
+            let images_source = self.root_dir.join(Convertor::IMAGE_DIR);
+            let images_dest =
+                PathBuf::from(self.configuration.out_dir()).join(Convertor::IMAGE_DIR);
             fs::create_dir_all(&images_dest)?;
-            for entry in fs::read_dir(format!("{}/images", self.root_dir.to_str().unwrap()))? {
+            for entry in fs::read_dir(&images_source)? {
                 let entry = entry?;
                 debug!("Copying {:?}", entry.file_name());
                 file_utils::copy_file(
@@ -150,19 +158,19 @@ impl Convertor {
         file_utils::write_to_file(
             self.configuration.out_dir() + "/highlight.css",
             highlight_css.to_owned(),
-        );
+        )?;
         file_utils::write_to_file(
             self.configuration.out_dir() + "/highlight.js",
             highlight_js.to_owned(),
-        );
+        )?;
         file_utils::write_to_file(
             self.configuration.out_dir() + "/made-up.css",
             made_up_css.to_owned(),
-        );
+        )?;
         file_utils::write_to_file(
             self.configuration.out_dir() + "/tomorrow-night.css",
             tomorrow_night_css.to_owned(),
-        );
+        )?;
 
         Ok(())
     }
@@ -206,12 +214,13 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
     Err(ErrorKind::Fail(format!(
         "Configuration file: {} not found in {}",
         CONFIG_NAME,
-        fs::canonicalize(path).unwrap().display()
+        full_path.display()
     )).into())
 }
 
-/// Processes the configuration and produces a configuration addressing if
-/// aspects are not present and other implications.
+/// Processes the configuration and ensure the environment is in a state
+/// matching the definition in the configuration. This function will ensure:
+/// * When the index template is specifed, that the specified file exists.
 fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
     if config.index_template().is_some() {
         let path = root_dir.as_ref().join(config.index_template().unwrap());
@@ -220,7 +229,9 @@ fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Resu
             path
         );
         if !file_utils::check_file_exists(path) {
-            return Err(ErrorKind::Fail("Expected index.md in the root directory".into()).into());
+            return Err(ErrorKind::Fail(
+                "Did not find index template specified in configuration".into(),
+            ).into());
         }
     }
     Ok(())
