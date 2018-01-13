@@ -12,7 +12,7 @@ fn test_it() {
         max_log_level.set(::log::LogLevelFilter::Debug);
         Box::new(SimpleLogger)
     }).unwrap();
-    const CONFIG_FILE: &str = "resources/mdup.yml";
+    const CONFIG_FILE: &str = "tests/resources/input/site/mdup.yml";
     // Need to use temporary directories for this
     // Ammend the configuration
     let tmp_dir = env::temp_dir();
@@ -27,7 +27,7 @@ fn test_it() {
 
     // Let's start the testing
     let convertor: made_up::Convertor =
-        made_up::Convertor::new("resources").expect("Failed Convertor::new");
+        made_up::Convertor::new("tests/resources/input/site").expect("Failed Convertor::new");
     let files = convertor.generate_site().expect("Failed generate_site");
     convertor.write_files(files).expect("Failed write_files");
 
@@ -52,15 +52,15 @@ fn test_it() {
     ));
 
     println!("Checking all_test content");
-    let expected = include_str!("../tests/resources/all_test_good.html");
+    let expected = include_str!("../tests/resources/output/all_test_good.html");
     let actual = common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/all_test.html");
     common::compare_string_content(expected, &actual.to_string());
     println!("Checking index content");
-    let expected = include_str!("../tests/resources/index_good.html");
+    let expected = include_str!("../tests/resources/output/index_good.html");
     let actual = common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/index.html");
     common::compare_string_content(expected, &actual.to_string());
     println!("Checking second-page content");
-    let expected = include_str!("../tests/resources/second-page_good.html");
+    let expected = include_str!("../tests/resources/output/second-page_good.html");
     let actual =
         common::read_from_file(tmp_dir.to_string_lossy().to_string() + "/second-page.html");
     common::compare_string_content(expected, &actual.to_string());

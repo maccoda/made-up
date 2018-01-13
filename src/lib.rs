@@ -30,6 +30,7 @@ error_chain! {
     foreign_links {
         IO(std::io::Error);
         Template(handlebars::RenderError);
+        TemplateCompile(handlebars::TemplateError);
         Config(serde_yaml::Error);
     }
 
@@ -234,9 +235,10 @@ mod tests {
     #[test]
     fn test_create_html() {
         // Read expected
-        let config = super::config::Configuration::from("resources/mdup.yml").unwrap();
-        let expected = include_str!("../tests/resources/all_test_good.html");
-        let actual = super::create_html("resources/all_test.md", &config).unwrap();
+        let config =
+            super::config::Configuration::from("tests/resources/input/site/mdup.yml").unwrap();
+        let expected = include_str!("../tests/resources/output/all_test_good.html");
+        let actual = super::create_html("tests/resources/input/site/all_test.md", &config).unwrap();
         test_utils::compare_string_content(expected, &actual);
     }
 
@@ -250,15 +252,15 @@ mod tests {
     #[test]
     fn test_fail_handle_config_no_index() {
         let config =
-            super::config::Configuration::from("tests/resources/test_conf_all.yml").unwrap();
-        assert!(super::handle_config(&"resouces", &config).is_err());
+            super::config::Configuration::from("tests/resources/input/test_conf_all.yml").unwrap();
+        assert!(super::handle_config(&"templates", &config).is_err());
     }
 
     // Ensure that return positive result when the index is not to be generated and one exists
     #[test]
     fn test_pass_handle_config() {
         let config =
-            super::config::Configuration::from("tests/resources/test_conf_all.yml").unwrap();
+            super::config::Configuration::from("tests/resources/input/test_conf_all.yml").unwrap();
         let mut tmp_dir = env::temp_dir();
         tmp_dir.push("index_test.hbs");
 

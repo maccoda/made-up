@@ -50,6 +50,9 @@ fn handle_error<T: Debug>(possible_error: Result<T, Error>) -> T {
             made_up::Error(ErrorKind::Template(e), _) => {
                 println!("Template Generation Error: {:?}", e)
             }
+            made_up::Error(ErrorKind::TemplateCompile(e), _) => {
+                println!("Template Compilation Error: {:?}", e)
+            }
             made_up::Error(ErrorKind::Msg(msg), _) => println!("{}", msg),
         };
         std::process::exit(1);

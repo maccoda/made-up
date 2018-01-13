@@ -135,13 +135,13 @@ mod tests {
         use std::io::Read;
 
         let mut content = String::new();
-        File::open("resources/all_test.md")
+        File::open("tests/resources/input/site/all_test.md")
             .and_then(|mut x| x.read_to_string(&mut content))
             .unwrap();
         let parser = Parser::new_ext(&content, OPTION_ENABLE_TABLES);
 
         let actual = super::consume(parser);
-        let expected = include_str!("../tests/resources/all_test_raw_good.html");
+        let expected = include_str!("../tests/resources/output/all_test_raw_good.html");
         test_utils::compare_string_content(expected, &actual);
     }
 }

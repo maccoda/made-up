@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_find_markdown_files() {
-        const ROOT_DIR: &str = "resources";
+        const ROOT_DIR: &str = "tests/resources/input/site";
         let files = super::find_markdown_files(ROOT_DIR).unwrap();
         const SKIPPED_TOP: &str = "_ignored_top.md";
         const SKIPPED_NESTED: &str = "_ignored_nested.md";
