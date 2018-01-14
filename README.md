@@ -1,8 +1,8 @@
 # Made-up
- [![Travis Linux](https://img.shields.io/travis/maccoda/made-up.svg)]()
+ [![Travis Linux](https://img.shields.io/travis/maccoda/made-up.svg)](https://travis-ci.org/maccoda/made-up)
  ![Appveyor Windows](https://ci.appveyor.com/api/projects/status/github/maccoda/made-up?svg=true)
-[![Codecov](https://img.shields.io/codecov/c/github/maccoda/made-up.svg)]()
-[![GitHub release](https://img.shields.io/github/release/maccoda/made-up.svg)]()
+[![Codecov](https://img.shields.io/codecov/c/github/maccoda/made-up.svg)](https://codecov.io/gh/maccoda/made-up)
+[![GitHub release](https://img.shields.io/github/release/maccoda/made-up.svg)](https://github.com/maccoda/made-up/releases)
 
 Simple tool to generate a static website from a directory structure of Markdown
 files. Bringing back the old school simplicity and beautifying notes and
