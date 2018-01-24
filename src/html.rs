@@ -52,7 +52,13 @@ fn print_start_elem(tag: &Tag) -> String {
         &Tag::Strong => "<b>".to_string(),
         &Tag::Emphasis => "<em>".to_string(),
         &Tag::Item => "<li>".to_string(),
-        &Tag::List(_) => "<ul>".to_string(),
+        &Tag::List(ref opt) => {
+            if opt.is_some() {
+                "<ol>".to_string()
+            } else {
+                "<ul>".to_string()
+            }
+        }
         &Tag::Paragraph => "<p>".to_string(),
         &Tag::Image(ref src, _) => format!("<img src=\"{}\"", src.as_ref()),
         &Tag::Code => "<code>".to_string(),
@@ -79,7 +85,11 @@ fn print_end_elem(tag: &Tag) -> String {
         &Tag::Strong => "</b>\n".to_string(),
         &Tag::Emphasis => "</em>\n".to_string(),
         &Tag::Item => "</li>\n".to_string(),
-        &Tag::List(_) => "</ul>\n".to_string(),
+        &Tag::List(ref opt) => if opt.is_some() {
+            "</ol>".to_string()
+        } else {
+            "</ul>".to_string()
+        },
         &Tag::Paragraph => "</p>\n".to_string(),
         &Tag::Image(_, _) => "/>\n".to_string(),
         &Tag::Code => "</code>\n".to_string(),
@@ -142,6 +152,28 @@ mod tests {
 
         let actual = super::consume(parser);
         let expected = include_str!("../tests/resources/output/all_test_raw_good.html");
+        test_utils::compare_string_content(expected, &actual);
+    }
+
+    #[test]
+    fn test_ordered_list() {
+        use pulldown_cmark::Parser;
+        let content = "1. First point\n1. Second point";
+        let parser = Parser::new(content);
+
+        let actual = super::consume(parser);
+        let expected = "<ol><li>First point</li><li>Second point</li></ol>";
+        test_utils::compare_string_content(expected, &actual);
+    }
+
+    #[test]
+    fn test_unordered_list() {
+        use pulldown_cmark::Parser;
+        let content = "- First point\n- Second point";
+        let parser = Parser::new(content);
+
+        let actual = super::consume(parser);
+        let expected = "<ul><li>First point</li><li>Second point</li></ul>";
         test_utils::compare_string_content(expected, &actual);
     }
 }

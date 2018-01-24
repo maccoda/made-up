@@ -22,7 +22,8 @@ macro_rules! configuration {
                 fn from<P: AsRef<Path>>(config_path: P) ->
                     Result<RawConfiguration> {
                     file_utils::read_from_file(config_path)
-                        .and_then(|contents| serde_yaml::from_str(&contents).map_err(|err|ErrorKind::Config(err).into()))
+                        .and_then(|contents| serde_yaml::from_str(&contents)
+                        .map_err(|err|ErrorKind::Config(err).into()))
                 }
             }
             #[derive(Debug)]
