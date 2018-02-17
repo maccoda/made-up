@@ -13,6 +13,7 @@ extern crate walkdir;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use walker::{MarkdownFile, MarkdownFileList};
 
 mod html;
 mod walker;
@@ -22,8 +23,6 @@ mod templates;
 
 #[cfg(test)]
 mod test_utils;
-
-use walker::MarkdownFileList;
 
 /// Error type for the conversion of the markdown files to the static site.
 error_chain! {
@@ -83,7 +82,7 @@ impl Convertor {
         let out_dir = self.configuration.out_dir();
 
         for file in all_files.get_files() {
-            let result = create_html(file.get_path(), &self.configuration)?;
+            let result = create_html(file, &self.configuration)?;
             converted_files.push(ConvertedFile {
                 path: PathBuf::from(&out_dir).join(format!("{}.html", file.get_file_name())),
                 content: result,
@@ -187,12 +186,12 @@ fn find_all_files<P: AsRef<Path>>(root_dir: P) -> Result<MarkdownFileList> {
 
 /// Converts the provided Markdown file to it HTML equivalent. This ia a direct
 /// mapping it does not add more tags, such as `<body>` or `<html>`.
-fn create_html<P: AsRef<Path>>(file_name: P, config: &config::Configuration) -> Result<String> {
+fn create_html(file: &MarkdownFile, config: &config::Configuration) -> Result<String> {
     let mut content = String::new();
-    File::open(file_name).and_then(|mut x| x.read_to_string(&mut content))?;
+    File::open(file.get_path()).and_then(|mut x| x.read_to_string(&mut content))?;
     let parser = pulldown_cmark::Parser::new_ext(&content, pulldown_cmark::OPTION_ENABLE_TABLES);
 
-    templates::encapsulate_bare_html(html::consume(parser), config)
+    templates::encapsulate_bare_html(html::consume(parser), config, file.get_heading())
 }
 
 /// Finds the configuration file and deserializes it.
@@ -242,6 +241,8 @@ mod tests {
     use test_utils;
     use std::env;
     use std::fs::File;
+    use std::path::Path;
+    use super::MarkdownFile;
 
     #[test]
     fn test_create_html() {
@@ -249,7 +250,8 @@ mod tests {
         let config =
             super::config::Configuration::from("tests/resources/input/site/mdup.yml").unwrap();
         let expected = include_str!("../tests/resources/output/all_test_good.html");
-        let actual = super::create_html("tests/resources/input/site/all_test.md", &config).unwrap();
+        let md_file = MarkdownFile::from(Path::new("tests/resources/input/site/all_test.md"));
+        let actual = super::create_html(&md_file, &config).unwrap();
         test_utils::compare_string_content(expected, &actual);
     }
 
