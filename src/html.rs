@@ -116,6 +116,8 @@ fn name_to_id(name: &str) -> String {
     name.to_lowercase().replace(" ", "-")
 }
 
+/// Consumes the provided `Event` iterator to produce
+/// the HTML string representation of parsed markdown.
 pub fn consume<'a, I: Iterator<Item = Event<'a>>>(iter: I) -> String {
     let mut consumer = Consumer {
         iter,

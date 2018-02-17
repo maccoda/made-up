@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -29,6 +30,7 @@ impl MarkdownFileList {
 #[derive(Debug)]
 pub struct MarkdownFile {
     path: PathBuf,
+    heading: RefCell<String>,
 }
 
 impl MarkdownFile {
@@ -36,6 +38,7 @@ impl MarkdownFile {
     pub fn from(path: &Path) -> MarkdownFile {
         MarkdownFile {
             path: path.to_path_buf(),
+            heading: RefCell::new(String::new()),
         }
     }
     /// Return the path of the Markdown file
@@ -55,30 +58,35 @@ impl MarkdownFile {
 
     /// Return the main heading of the Markdown file
     pub fn get_heading(&self) -> String {
-        // Obtain the heading
-        let content = file_utils::read_from_file(&self.path)
-            .expect(&format!("Unable to read Markdown file: {:?}", self.path));
-        let parser = Parser::new(&content);
-        let mut iter = parser.into_iter();
-        let mut opt_header = None;
-        let mut in_header = false;
-        while let Some(event) = iter.next() {
-            // Look for a start event for a heading
-            if let Event::Start(tag) = event {
-                // Check the tag
-                if let Tag::Header(num) = tag {
-                    if num == 1 {
-                        in_header = true;
+        if self.heading.borrow().is_empty() {
+            let content = file_utils::read_from_file(&self.path)
+                .expect(&format!("Unable to read Markdown file: {:?}", self.path));
+            let parser = Parser::new(&content);
+            let mut iter = parser.into_iter();
+            let mut opt_header = None;
+            let mut in_header = false;
+            while let Some(event) = iter.next() {
+                // Look for a start event for a heading
+                if let Event::Start(tag) = event {
+                    // Check the tag
+                    if let Tag::Header(num) = tag {
+                        if num == 1 {
+                            in_header = true;
+                        }
+                    }
+                } else if let Event::Text(text) = event {
+                    if in_header {
+                        opt_header = Some(text.to_string());
+                        break;
                     }
                 }
-            } else if let Event::Text(text) = event {
-                if in_header {
-                    opt_header = Some(text.to_string());
-                    break;
-                }
             }
+            let result = opt_header.expect(&format!("No header 1 found for {:?}", self.path));
+            self.heading.borrow_mut().push_str(&result);
+            result
+        } else {
+            self.heading.borrow().clone()
         }
-        opt_header.expect(&format!("No header 1 found for {:?}", self.path))
     }
 }
 
@@ -128,11 +136,13 @@ pub fn find_markdown_files<P: AsRef<Path>>(root_dir: P) -> Result<Vec<MarkdownFi
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
+    use std::cell::RefCell;
 
     #[test]
     fn test_get_file_name() {
         let file = super::MarkdownFile {
             path: PathBuf::from("resources/tester.md"),
+            heading: RefCell::new(String::new()),
         };
         assert_eq!(file.get_file_name(), "tester");
     }

@@ -65,7 +65,11 @@ fn populate_index_data(files: &MarkdownFileList, config: &Configuration) -> Map<
 }
 
 /// Take a HTML string and encapsulate with the correct tags. Will also add the stylesheet.
-pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<String> {
+pub fn encapsulate_bare_html(
+    content: String,
+    config: &Configuration,
+    title: String,
+) -> Result<String> {
     let mut data = Map::new();
     data.insert(
         "stylesheet".to_string(),
@@ -77,7 +81,10 @@ pub fn encapsulate_bare_html(content: String, config: &Configuration) -> Result<
                 .collect(),
         ),
     );
-    data.insert("title".to_string(), Json::String(config.title()));
+    data.insert(
+        "title".to_string(),
+        Json::String(config.title() + " - " + &title),
+    );
     data.insert("md_content".to_string(), Json::String(content));
 
     build_template(&data, include_str!("../templates/basic.hbs"))
