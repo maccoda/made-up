@@ -52,7 +52,7 @@ impl MarkdownFile {
             .as_path()
             .file_stem()
             .and_then(|x| x.to_str())
-            .unwrap()
+            .expect("Unable to get Markdown filename")
             .to_string()
     }
 

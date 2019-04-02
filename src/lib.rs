@@ -60,6 +60,7 @@ impl Convertor {
             root_dir.canonicalize()?.display()
         );
         let configuration = read_config(&root_dir)?;
+        debug!("{:?}", configuration);
         handle_config(&root_dir, &configuration)?;
         Ok(Convertor {
             configuration,
@@ -142,7 +143,10 @@ impl Convertor {
                 file_utils::copy_file(
                     &images_source,
                     &images_dest,
-                    &entry.file_name().into_string().unwrap(),
+                    &entry
+                        .file_name()
+                        .into_string()
+                        .expect("Failed to get file name"),
                 )?;
             }
         }
@@ -219,10 +223,14 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<config::Configuration> {
 
 /// Processes the configuration and ensure the environment is in a state
 /// matching the definition in the configuration. This function will ensure:
-/// * When the index template is specifed, that the specified file exists.
+/// * When the index template is specified, that the specified file exists.
 fn handle_config(root_dir: &AsRef<Path>, config: &config::Configuration) -> Result<()> {
     if config.index_template().is_some() {
-        let path = root_dir.as_ref().join(config.index_template().unwrap());
+        let path = root_dir.as_ref().join(
+            config
+                .index_template()
+                .expect("Failed to get index template path"),
+        );
         info!(
             "Checking that {:?} exists like the configuration says it will",
             path
